@@ -1,4 +1,7 @@
+import re
 from pydantic import BaseModel, EmailStr, field_validator
+
+ALLOWED_SPECIAL_CHARS = r'@!#$%^&*()/'
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -8,12 +11,16 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def password_strength(cls, v: str):
-        if len(v) < 8:
-            raise ValueError("A senha deve ter no mínimo 8 caracteres.")
-        if not any(c.isupper() for c in v):
-            raise ValueError("A senha deve conter ao menos uma letra maiúscula.")
-        if not any(c.isdigit() for c in v):
+        if not (8 <= len(v) <= 20):
+            raise ValueError("A senha deve ter entre 8 e 20 caracteres.")
+        if not re.search(r'[a-zA-Z]', v):
+            raise ValueError("A senha deve conter ao menos uma letra.")
+        if not re.search(r'[0-9]', v):
             raise ValueError("A senha deve conter ao menos um número.")
+        if not re.search(r'[@!#$%^&*()/\\]', v):
+            raise ValueError("A senha deve conter ao menos um caractere especial.")
+        if re.search(r'[^a-zA-Z0-9@!#$%^&*()/\\]', v):
+            raise ValueError("A senha contém caracteres não permitidos.")
         return v
     
     @field_validator("username")
