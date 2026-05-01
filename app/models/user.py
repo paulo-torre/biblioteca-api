@@ -29,7 +29,7 @@ class RegisterRequest(BaseModel):
     
     @field_validator("username")
     @classmethod
-    def username_valid(cls, v):
+    def username_valid(cls, v: str):
         if len(v) < 3:
             raise ValueError("O username deve ter no mínimo 3 caracteres.")
         if not v.isalnum():
