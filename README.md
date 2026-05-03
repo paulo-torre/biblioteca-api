@@ -1,21 +1,13 @@
-# Feature: cadastro de usuário no banco de dados
+# Refactor
 
-## Reorganização do projeto:
+## Remoção do regex:
 
-Antes, as funcionalidades estavam todas no arquivo `main.py`, o que deixava o projeto ilegível e de difícil manutenção. Agora cada feature está (e vai ser) separada em diferentes arquivos, que serão organizados em módulos.
+Antes, na validação da senha, era usado testes com regex. Essa opção é geralmente mal vista pela maioria dos desenvolvedores. O regex possui certos problemas, como backtracking e ilegibilidade.
 
-### Organização:
+## any() e all()
 
-* **`app/` (Módulo-pai):** onde está todos os sub-módulos (`models/` e `routers/`) e arquivos python (`database.py`, `dependencies.py` e `main.py`).
+No lugar, foram usadas as função `any()` e `all()` que fazem o mesmo papel dos testes em regex.
 
-* **`database.py`:** conecta com o banco de dados
-* **`dependencies.py`:** contém features que são usadas em várias partes do projeto
-* **`main.py`:** inicializa a API e as rotas cadastradas em `routers/`
+## Set
 
-
-* **`models/`:** onde estará todas as classes
-* **`routers/`:** onde estará todas as rotas, incluindo suas delarações e funcionamentos
-
-## Cadastro de usuário:
-
-O cadastro é feito ao chamar a rota _/auth/register_, passando o _username_, _email_ e _password_. O campos de _username_ e _email_ são buscados no banco de dados, para garantir que não haja usuários duplicados. Caso esteja tudo ok, o campo _password_ é criptografado e salvo, junto aos outros campos, no banco de dados.
+Os caracteres especiais permitidos foram armazenados em um set. Em comparação om strings ou listas, sets são muito mais eficientes, pois a verificação de pertinência em um conjunto é **O(1)**, isto é, é uma constante, não varia em relação ao tamanho dele.
