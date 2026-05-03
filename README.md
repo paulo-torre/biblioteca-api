@@ -1,21 +1,27 @@
-# Feature: cadastro de usuário no banco de dados
+# Feature: rotas de livros
 
-## Reorganização do projeto:
+## Rotas adicionadas no arquivo books.py: 
 
-Antes, as funcionalidades estavam todas no arquivo `main.py`, o que deixava o projeto ilegível e de difícil manutenção. Agora cada feature está (e vai ser) separada em diferentes arquivos, que serão organizados em módulos.
+### @router.post("/saved"):
 
-### Organização:
+Salva um livro na lista de livros salvos do usuário. Necessita de um usuário cadastrado e de um book_id.
 
-* **`app/` (Módulo-pai):** onde está todos os sub-módulos (`models/` e `routers/`) e arquivos python (`database.py`, `dependencies.py` e `main.py`).
+### @router.delete("/saved/{book_id}"):
 
-* **`database.py`:** conecta com o banco de dados
-* **`dependencies.py`:** contém features que são usadas em várias partes do projeto
-* **`main.py`:** inicializa a API e as rotas cadastradas em `routers/`
+Deleta um livro da lista de livros salvos do usuário. OBS: aqui, não há verificação de existência da tupla antes de rodar o DELETE, pois não há problema de rodar um delete sem existir.
 
+### @router.get("/saved"):
 
-* **`models/`:** onde estará todas as classes
-* **`routers/`:** onde estará todas as rotas, incluindo suas delarações e funcionamentos
+Retorna a lista de livros salvos do usuário.
 
-## Cadastro de usuário:
+### @router.post("/ratings"):
 
-O cadastro é feito ao chamar a rota _/auth/register_, passando o _username_, _email_ e _password_. O campos de _username_ e _email_ são buscados no banco de dados, para garantir que não haja usuários duplicados. Caso esteja tudo ok, o campo _password_ é criptografado e salvo, junto aos outros campos, no banco de dados.
+Adiciona uma avaliação às avaliações do usuário. A avaliação deve estar em VALID_RATINGS. Se o livro adicionado já estiver avaliado, roda um UPDATE ao invés de um INSERT. Necessita de um usuário cadastrado e de um book_id.
+
+### @router.delete("/ratings/{book_id}"):
+
+Deleta uma avaliação das avaliações do usuário. OBS: aqui, não há verificação de existência da tupla antes de rodar o DELETE, pois não há problema de rodar um delete sem existir.
+
+### @router.get("/ratings"):
+
+Retorna a lista de avaliações do usuário.

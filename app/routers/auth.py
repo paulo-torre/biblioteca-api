@@ -68,7 +68,7 @@ async def login(body: LoginRequest):
 
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    return {"acces_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/teste")
 async def teste(current_user = Depends(get_current_user)):
