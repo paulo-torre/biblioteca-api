@@ -9,6 +9,7 @@ router = APIRouter()
 OPEN_LIBRARY_API_URL = "https://openlibrary.org"
 VALID_RATINGS = {"liked", "loved", "disliked"}
 
+
 @router.get("/search")
 async def search_books(query: str):
     if not query:
@@ -55,8 +56,8 @@ async def save_book(book_id: str, current_user = Depends(get_current_user)):
 
             response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
             
-            if response.status_code() != 200:                                           
-                raise HTTPException(status_code=response.status_code(), detail="A Id do livro não foi encontrada.")
+            if response.status_code() == 404:                                           
+                raise HTTPException(status_code=response.status_code(), detail="Livro não encontrado.")
             
 
             existing = supabase.table("saved_books").select("user_id", "book_id").eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
@@ -90,8 +91,8 @@ async def delete_book(book_id: str, current_user = Depends(get_current_user)):
 
             response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
             
-            if response.status_code() != 200:                                           
-                raise HTTPException(status_code=response.status_code(), detail="A Id do livro não foi encontrada.")
+            if response.status_code() == 404:                                           
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
 
 
             result = supabase.table("saved_books").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
@@ -110,6 +111,9 @@ async def get_ratings(current_user = Depends(get_current_user)):
 
     result = supabase.table("book_ratings").select("book_id, rating").eq("user_id", current_user["id"]).execute()
 
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Erro ao procurar livros avaliados.")
+
     return result.data
 
 
@@ -119,43 +123,73 @@ async def rate_book(book_id: str, rating: str, current_user = Depends(get_curren
     if rating not in VALID_RATINGS:
         raise HTTPException(status_code=400, detail="Avaliação inválida. Use liked, loved ou disliked.")
 
+    async with httpx.AsyncClient() as client:
+        try:
+
+            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+
+
+            existing = supabase.table("book_ratings").select("id").eq("book_id", book_id).eq("user_id", current_user["id"]).execute()
+
+            if existing.data:
+                raise HTTPException(status_code=500, detail="Você já avaliou este livro, tente editar a sua avaliação.")
+            
+            
+            result = supabase.table("book_ratings").insert({
+                "user_id": current_user["id"],
+                "book_id": book_id,
+                "rating": rating,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
+            
+            return result.data
+        
+        except httpx.RequestError:
+
+            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+        
+
+@router.put("/ratings")
+async def edit_book_rating(book_id: str, rating: str, current_user = Depends(get_current_user)):
+
+    if rating not in VALID_RATINGS:
+        raise HTTPException(status_code=400, detail="Avaliação inválida. Use liked, loved ou disliked.")
 
     async with httpx.AsyncClient() as client:
         try:
 
             response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
-            if response.status_code != 200:
-                raise HTTPException(status_code=404, detail="ID do livro não foi encontrada.")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
 
 
-            existing = supabase.table("book_ratings").select("id").eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
+            existing = supabase.table("book_ratings").select("id").eq("book_id", book_id).eq("user_id", current_user["id"]).execute()
 
-            #Se o usuário já avaliou o livro, roda um UPDATE
-            if existing.data:
-                result = supabase.table("book_ratings").update({
-                    "rating": rating,
-                    "rated_at": datetime.now(timezone.utc).isoformat()
-                }).eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
-                
-            #Senão, roda um INSERT
-            else:
-                result = supabase.table("book_ratings").insert({
-                    "user_id": current_user["id"],
-                    "book_id": book_id,
-                    "rating": rating,
-                    "saved_at": datetime.now(timezone.utc).isoformat()
-                }).execute()
-
+            if not existing.data:
+                raise HTTPException(status_code=500, detail="Você ainda não avaliou este livro, tente adicionar uma avaliação.")
+            
+            
+            result = supabase.table("book_ratings").update({
+                "user_id": current_user["id"],
+                "book_id": book_id,
+                "rating": rating,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
 
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
-
+            
             return result.data
-
+        
         except httpx.RequestError:
+
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
-
-
+        
 @router.delete("/ratings/{book_id}")
 async def delete_rating(book_id: str, current_user = Depends(get_current_user)):
 
@@ -163,8 +197,8 @@ async def delete_rating(book_id: str, current_user = Depends(get_current_user)):
         try:
 
             response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
-            if response.status_code != 200:
-                raise HTTPException(status_code=404, detail="ID do livro não foi encontrada.")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
 
 
             result = supabase.table("book_ratings").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
@@ -177,3 +211,129 @@ async def delete_rating(book_id: str, current_user = Depends(get_current_user)):
 
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+        
+
+@router.post("/reviews")
+async def review_book(book_id: str, rating: int, review: str, current_user = Depends(get_current_user)):
+
+    async with httpx.AsyncClient() as client:
+        try:
+
+            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+
+
+            existing = supabase.table("book_reviews").select("id").eq("book_id", book_id).eq("user_id", current_user["id"]).execute()
+
+            if existing.data:
+                raise HTTPException(status_code=500, detail="Você já avaliou este livro, tente editar a sua avaliação.")
+            
+            
+            result = supabase.table("book_reviews").insert({
+                "user_id": current_user["id"],
+                "book_id": book_id,
+                "rating": rating,
+                "comment": review,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Erro ao salvar review.")
+            
+            return result.data
+        
+        except httpx.RequestError:
+
+            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+
+
+@router.put("/reviews")
+async def edit_book_review(book_id: str, rating: int, review: str, current_user = Depends(get_current_user)):
+
+    async with httpx.AsyncClient() as client:
+        try:
+
+            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+
+
+            existing = supabase.table("book_reviews").select("id").eq("rating", rating).eq("user_id", current_user["id"]).execute()
+
+            if not existing.data:
+                raise HTTPException(status_code=500, detail="Você ainda não avaliou este livro, tente adicionar uma avaliação.")
+            
+            
+            result = supabase.table("book_reviews").update({
+                "user_id": current_user["id"],
+                "book_id": book_id,
+                "rating": rating,
+                "comment": review,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
+
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Erro ao editar review.")
+            
+            return result.data
+        
+        except httpx.RequestError:
+
+            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+
+
+@router.delete("/reviews/{book_id}")
+async def delete_review(book_id: str, current_user = Depends(get_current_user)):
+
+    async with httpx.AsyncClient() as client:
+        try:
+
+            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+
+
+            result = supabase.table("book_reviews").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
+
+            if not result.data:
+                raise HTTPException(status_code=404, detail="Review não encontrada.")
+
+
+            return {"message": "Review removida com sucesso."}
+
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+        
+
+@router.get("/ratings/{book_id}")
+async def get_book_reviews(book_id: str):
+
+    async with httpx.AsyncClient() as client:
+        try:
+
+            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
+            if response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+            
+
+            result = supabase.table("book_reviews").select("book_id, user_id, rating, comment").eq("book_id", book_id).execute()
+
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
+
+            return result.data
+        
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+        
+
+@router.get("/ratings")
+async def get_user_reviews(current_user = Depends(get_current_user)):
+
+    result = supabase.table("book_reviews").select("user_id, book_id, rating, comment").eq("user_id", current_user["id"]).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
+
+    return result.data
