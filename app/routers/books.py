@@ -43,7 +43,7 @@ async def get_saved_book(current_user = Depends(get_current_user)):
 
     result = supabase.table("saved_books").select("book_id").eq("user_id", current_user["id"]).execute()
 
-    return result.data
+    return {"data": result.data}
 
 
 @router.post("/saved")
@@ -75,7 +75,7 @@ async def save_book(book_id: str, current_user = Depends(get_current_user)):
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao salvar livro.") 
 
-            return "Livro salvo com sucesso."
+            return {"message": "Livro salvo com sucesso."}
 
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
@@ -85,25 +85,13 @@ async def save_book(book_id: str, current_user = Depends(get_current_user)):
 async def delete_book(book_id: str, current_user = Depends(get_current_user)):
 
     #Deleta livro com id book_id, em OLID, da tabela saved
+    
+    result = supabase.table("saved_books").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
 
-    async with httpx.AsyncClient() as client:
-        try:
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Livro não encontrado entre os salvos.") 
 
-            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
-            
-            if response.status_code() == 404:                                           
-                raise HTTPException(status_code=404, detail="Livro não encontrado.")
-
-
-            result = supabase.table("saved_books").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
-
-            if not result.data:
-                raise HTTPException(status_code=500, detail="Livro não encontrado entre os salvos.") 
-
-            return {"message": "Livro deletado com sucesso."}
-
-        except httpx.RequestError:
-            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+    return {"message": "Livro deletado com sucesso."}
 
 
 @router.get("/ratings")
@@ -114,7 +102,7 @@ async def get_ratings(current_user = Depends(get_current_user)):
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao procurar livros avaliados.")
 
-    return result.data
+    return {"data": result.data}
 
 
 @router.post("/ratings")
@@ -147,7 +135,7 @@ async def rate_book(book_id: str, rating: str, current_user = Depends(get_curren
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
             
-            return result.data
+            return {"message": "Avaliação salva com sucesso."}
         
         except httpx.RequestError:
 
@@ -184,7 +172,7 @@ async def edit_book_rating(book_id: str, rating: str, current_user = Depends(get
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
             
-            return result.data
+            return {"message": "Avaliação editada com sucesso.", "data": result.data}
         
         except httpx.RequestError:
 
@@ -193,28 +181,20 @@ async def edit_book_rating(book_id: str, rating: str, current_user = Depends(get
 @router.delete("/ratings/{book_id}")
 async def delete_rating(book_id: str, current_user = Depends(get_current_user)):
 
-    async with httpx.AsyncClient() as client:
-        try:
+    result = supabase.table("book_ratings").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
 
-            response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
-            if response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Livro não encontrado.")
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
 
 
-            result = supabase.table("book_ratings").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
-
-            if not result.data:
-                raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
-
-
-            return {"message": "Avaliação removida com sucesso."}
-
-        except httpx.RequestError:
-            raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
+    return {"message": "Avaliação removida com sucesso."}
         
 
 @router.post("/reviews")
-async def review_book(book_id: str, rating: int, review: str, current_user = Depends(get_current_user)):
+async def review_book(book_id: str, rating: float, review: str, current_user = Depends(get_current_user)):
+
+    if not rating*2 % 1 == 0:
+        raise HTTPException(status_code=400, detail="Nota inválida. Ela deve ser múltipla de 0.5 .")
 
     async with httpx.AsyncClient() as client:
         try:
@@ -241,7 +221,7 @@ async def review_book(book_id: str, rating: int, review: str, current_user = Dep
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao salvar review.")
             
-            return result.data
+            return {"data": result.data}
         
         except httpx.RequestError:
 
@@ -276,7 +256,7 @@ async def edit_book_review(book_id: str, rating: int, review: str, current_user 
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao editar review.")
             
-            return result.data
+            return {"data": result.data}
         
         except httpx.RequestError:
 
@@ -322,7 +302,7 @@ async def get_book_reviews(book_id: str):
             if not result.data:
                 raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
 
-            return result.data
+            return {"data": result.data}
         
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
@@ -336,4 +316,4 @@ async def get_user_reviews(current_user = Depends(get_current_user)):
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
 
-    return result.data
+    return {"data": result.data}
