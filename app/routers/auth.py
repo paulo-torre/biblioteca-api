@@ -10,8 +10,10 @@ from app.services.email import send_verification_email
 from app.models.user import (
     RegisterRequest,
     LoginRequest,
+    ResendVerificationRequest,
     VerifyEmailRequest,
-    ResendVerificationRequest
+    ForgotPasswordRequest,
+    ResetPasswordRequest
 )
 
 router = APIRouter()
@@ -100,6 +102,14 @@ async def resend_verification(body: ResendVerificationRequest):
     send_verification_email(body.email, code)
 
     return {"message": "Novo código enviado."}
+
+@router.post("/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest):
+    pass
+
+@router.post("/reset-password")
+async def reset_password(body: ResetPasswordRequest):
+    pass
 
 @router.post("/login")
 async def login(body: LoginRequest):

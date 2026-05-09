@@ -45,10 +45,22 @@ class RegisterRequest(BaseModel):
     @classmethod
     def username_valid(cls, v: str) -> str:
         return validate_username(v)
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    username: str
         
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
 
 class UsernameChangeRequest(BaseModel):
     username: str
@@ -57,7 +69,7 @@ class UsernameChangeRequest(BaseModel):
     @classmethod
     def username_valid(cls, v: str) -> str:
         return validate_username(v)
-    
+
 class PasswordChangeRequest(BaseModel):
     password: str
     new_password: str
@@ -66,24 +78,25 @@ class PasswordChangeRequest(BaseModel):
     @classmethod
     def password_valid(cls, v: str) -> str:
         return validate_password(v)
+    
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
 
-class UserResponse(BaseModel):
-    id: str
-    email: str
-    username: str
-
-class VerifyEmailRequest(BaseModel):
+class ResetPasswordRequest(BaseModel):
     email: EmailStr
     code: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_valid(cls, v: str) -> str:
+        return validate_password(v)
 
 class EmailChangeRequest(BaseModel):
     new_email: EmailStr
 
 class VerifyEmailChangeRequest(BaseModel):
     code: str
-
-class ResendVerificationRequest(BaseModel):
-    email: EmailStr
 
 class DeleteAccountRequest(BaseModel):
     code: str
