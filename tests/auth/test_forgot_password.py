@@ -15,7 +15,7 @@ def test_forgot_password_nonexistent_email(client):
 def test_reset_password_wrong_code(client):
     token = register_and_verify(client, "reset_wrong@gmail.com", "resetwrong1", "Senha123!")
     client.post("/api/auth/forgot-password", json={"email": "reset_wrong@gmail.com"})
-    response = client.post("/api/auth/reset-password", json={
+    response = client.put("/api/auth/reset-password", json={
         "email": "reset_wrong@gmail.com",
         "code": "000000",
         "new_password": "NovaSenha123!"
@@ -28,7 +28,7 @@ def test_reset_password_same_as_old(client):
     client.post("/api/auth/forgot-password", json={"email": "reset_same@gmail.com"})
     result = supabase.table("users").select("verify_code").eq("email", "reset_same@gmail.com").execute()
     code = result.data[0]["verify_code"]
-    response = client.post("/api/auth/reset-password", json={
+    response = client.put("/api/auth/reset-password", json={
         "email": "reset_same@gmail.com",
         "code": code,
         "new_password": "Senha123!"
@@ -41,7 +41,7 @@ def test_reset_password_success(client):
     client.post("/api/auth/forgot-password", json={"email": "reset_success@gmail.com"})
     result = supabase.table("users").select("verify_code").eq("email", "reset_success@gmail.com").execute()
     code = result.data[0]["verify_code"]
-    response = client.post("/api/auth/reset-password", json={
+    response = client.put("/api/auth/reset-password", json={
         "email": "reset_success@gmail.com",
         "code": code,
         "new_password": "NovaSenha123!"

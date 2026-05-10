@@ -121,7 +121,7 @@ async def forgot_password(body: ForgotPasswordRequest):
 
     return {"message": "Código de confirmação enviado para seu email."}
 
-@router.post("/reset-password")
+@router.put("/reset-password")
 async def reset_password(body: ResetPasswordRequest):
     result = supabase.table("users").select(
         "id, password, verify_code, verify_code_expires"

@@ -95,7 +95,7 @@ pytest tests/ -v
 | POST | `/api/auth/verify-email` | ❌ | Valida o código de verificação e ativa a conta |
 | POST | `/api/auth/resend-verification` | ❌ | Reenvia o código de verificação |
 | POST | `/api/auth/forgot-password` | ❌ | Envia código de confirmação para o email |
-| POST | `/api/auth/reset-password` | ❌ | Valida o código de confirmação e redefine a senha |
+| PUT | `/api/auth/reset-password` | ❌ | Valida o código de confirmação e redefine a senha |
 | POST | `/api/auth/login` | ❌ | Login — retorna JWT |
 
 ### Usuário (`/api/user`)
