@@ -81,16 +81,17 @@ class PasswordChangeRequest(BaseModel):
     
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+    
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
     new_password: str
 
     @field_validator("new_password")
     @classmethod
     def password_valid(cls, v: str) -> str:
         return validate_password(v)
-
-class ResetPasswordRequest(BaseModel):
-    email: EmailStr
-    code: str
 
 class EmailChangeRequest(BaseModel):
     new_email: EmailStr
