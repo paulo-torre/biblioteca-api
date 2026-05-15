@@ -207,7 +207,7 @@ async def review_book(book_id: str, rating: float, review: str, current_user = D
             existing = supabase.table("book_reviews").select("id").eq("book_id", book_id).eq("user_id", current_user["id"]).execute()
 
             if existing.data:
-                raise HTTPException(status_code=500, detail="Você já avaliou este livro, tente editar a sua avaliação.")
+                raise HTTPException(status_code=409, detail="Você já avaliou este livro, tente editar a sua avaliação.")
             
             
             result = supabase.table("book_reviews").insert({
