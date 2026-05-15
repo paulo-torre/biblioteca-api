@@ -308,7 +308,7 @@ async def get_book_reviews(book_id: str):
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
         
 
-@router.get("/ratings")
+@router.get("/reviews")
 async def get_user_reviews(current_user = Depends(get_current_user)):
 
     result = supabase.table("book_reviews").select("user_id, book_id, rating, comment").eq("user_id", current_user["id"]).execute()
