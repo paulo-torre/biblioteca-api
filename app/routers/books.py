@@ -89,7 +89,7 @@ async def delete_book(book_id: str, current_user = Depends(get_current_user)):
     result = supabase.table("saved_books").delete().eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
 
     if not result.data:
-        raise HTTPException(status_code=500, detail="Livro não encontrado entre os salvos.") 
+        raise HTTPException(status_code=404, detail="Livro não encontrado entre os salvos.") 
 
     return {"message": "Livro deletado com sucesso."}
 
