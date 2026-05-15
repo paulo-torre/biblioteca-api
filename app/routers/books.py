@@ -193,8 +193,8 @@ async def delete_rating(book_id: str, current_user = Depends(get_current_user)):
 @router.post("/reviews")
 async def review_book(book_id: str, rating: float, review: str, current_user = Depends(get_current_user)):
 
-    if not rating*2 % 1 == 0:
-        raise HTTPException(status_code=400, detail="Nota inválida. Ela deve ser múltipla de 0.5 .")
+    if rating < 0 or rating > 5 or rating*2 % 1 != 0:
+        raise HTTPException(status_code=400, detail="Nota deve estar entre 0 e 5, em múltiplos de 0.5")
 
     async with httpx.AsyncClient() as client:
         try:
