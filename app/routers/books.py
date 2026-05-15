@@ -56,8 +56,8 @@ async def save_book(book_id: str, current_user = Depends(get_current_user)):
 
             response = await client.get(f"{OPEN_LIBRARY_API_URL}/books/{book_id}.json")
             
-            if response.status_code() == 404:                                           
-                raise HTTPException(status_code=response.status_code(), detail="Livro não encontrado.")
+            if response.status_code == 404:                                           
+                raise HTTPException(status_code=response.status_code, detail="Livro não encontrado.")
             
 
             existing = supabase.table("saved_books").select("user_id", "book_id").eq("user_id", current_user["id"]).eq("book_id", book_id).execute()
