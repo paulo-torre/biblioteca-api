@@ -239,7 +239,7 @@ async def edit_book_review(book_id: str, rating: int, review: str, current_user 
                 raise HTTPException(status_code=404, detail="Livro não encontrado.")
 
 
-            existing = supabase.table("book_reviews").select("id").eq("rating", rating).eq("user_id", current_user["id"]).execute()
+            existing = supabase.table("book_reviews").select("id").eq("book_id", book_id).eq("user_id", current_user["id"]).execute()
 
             if not existing.data:
                 raise HTTPException(status_code=500, detail="Você ainda não avaliou este livro, tente adicionar uma avaliação.")
