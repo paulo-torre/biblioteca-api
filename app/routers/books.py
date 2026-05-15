@@ -286,7 +286,7 @@ async def delete_review(book_id: str, current_user = Depends(get_current_user)):
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
         
 
-@router.get("/ratings/{book_id}")
+@router.get("/reviews/{book_id}")
 async def get_book_reviews(book_id: str):
 
     async with httpx.AsyncClient() as client:
