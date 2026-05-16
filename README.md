@@ -28,9 +28,16 @@ app/
     └── email.py         # envio de emails transacionais
 tests/
 ├── __init__.py
-└── test_auth_n_user.py  # testes de integração
-conftest.py              # fixtures compartilhados entre testes
+├── conftest.py          # fixtures compartilhados entre testes
+├── helpers.py           # funções auxiliares para os testes
+├── auth/                # testes para a rota auth
+|   └── ...
+├── books/               # testes para a rota books
+|   └── ...
+└── user/                # testes para a rota user
+    └── ...
 pytest.ini               # configuração do pytest
+requirements.txt         # dependências do projeto
 ```
 
 ## Instalação
@@ -46,10 +53,23 @@ pip install -r requirements.txt
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ```env
+# Database
+
+## Production
 SUPABASE_URL=...
 SUPABASE_SERVICE_KEY=...
+
+## Development
+SUPABASE_DEVELOPMENT_URL=...
+SUPABASE_DEVELOPMENT_SERVICE_KEY=...
+
+# JWT
 SECRET_KEY=...
+
+# Resend
 RESEND_API_KEY=...
+
+# Configurations
 ENVIRONMENT=development
 ```
 
@@ -74,6 +94,8 @@ pytest tests/ -v
 | POST | `/api/auth/register` | ❌ | Cadastro de usuário — envia código de verificação por email |
 | POST | `/api/auth/verify-email` | ❌ | Valida o código de verificação e ativa a conta |
 | POST | `/api/auth/resend-verification` | ❌ | Reenvia o código de verificação |
+| POST | `/api/auth/forgot-password` | ❌ | Envia código de confirmação para o email |
+| PUT | `/api/auth/reset-password` | ❌ | Valida o código de confirmação e redefine a senha |
 | POST | `/api/auth/login` | ❌ | Login — retorna JWT |
 
 ### Usuário (`/api/user`)

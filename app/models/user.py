@@ -51,13 +51,6 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: ValidPassword
 
-class UsernameChangeRequest(BaseModel):
-    username: ValidUsername
-    
-class PasswordChangeRequest(BaseModel):
-    password: ValidPassword
-    new_password: ValidPassword
-
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -67,14 +60,29 @@ class VerifyEmailRequest(BaseModel):
     email: EmailStr
     code: ValidCode
 
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+class UsernameChangeRequest(BaseModel):
+    username: ValidUsername
+
+class PasswordChangeRequest(BaseModel):
+    password: ValidPassword
+    new_password: ValidPassword
+    
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: ValidCode
+    new_password: ValidPassword
+
 class EmailChangeRequest(BaseModel):
     new_email: EmailStr
 
 class VerifyEmailChangeRequest(BaseModel):
     code: ValidCode
-
-class ResendVerificationRequest(BaseModel):
-    email: EmailStr
 
 class DeleteAccountRequest(BaseModel):
     code: ValidCode
