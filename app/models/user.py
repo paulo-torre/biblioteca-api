@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, BeforeValidator
+from pydantic import BaseModel, EmailStr, AfterValidator
 from typing import Annotated
 
 PASSWORD_SPECIAL_CHARS = set('_-.@!#$%&*')
@@ -38,9 +38,9 @@ def validate_code(v: str) -> str:
     
     return v
 
-ValidUsername = Annotated[str, BeforeValidator(validate_username)]
-ValidPassword = Annotated[str, BeforeValidator(validate_password)]
-ValidCode = Annotated[str, BeforeValidator(validate_code)]
+ValidUsername = Annotated[str, AfterValidator(validate_username)]
+ValidPassword = Annotated[str, AfterValidator(validate_password)]
+ValidCode = Annotated[str, AfterValidator(validate_code)]
 
 class RegisterRequest(BaseModel):
     email: EmailStr
