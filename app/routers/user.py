@@ -42,7 +42,7 @@ async def username_change(body: UsernameChangeRequest, current_user: UserRespons
     return {"access_token": new_token, "token_type": "bearer"}
 
 @router.put("/me/email")
-async def request_email_change(body: EmailChangeRequest, current_user = Depends(get_current_user)):
+async def request_email_change(body: EmailChangeRequest, current_user: UserResponse = Depends(get_current_user)):
 
     existing = supabase.table("users").select("id").eq("email", body.new_email).execute()
 
@@ -62,7 +62,7 @@ async def request_email_change(body: EmailChangeRequest, current_user = Depends(
     return {"message": "Código enviado para o novo email."}
 
 @router.put("/me/password")
-async def request_password_change(body: PasswordChangeRequest, current_user = Depends(get_current_user)):
+async def request_password_change(body: PasswordChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     result = supabase.table("users").select("password").eq("id", current_user["id"]).execute()
     user = result.data[0]
 
@@ -88,7 +88,7 @@ async def request_password_change(body: PasswordChangeRequest, current_user = De
     
 
 @router.post("/me/verify-email-change")
-async def verify_email_change(body: VerifyEmailChangeRequest, current_user = Depends(get_current_user)):
+async def verify_email_change(body: VerifyEmailChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     result = supabase.table("users").select(
         "pending_email, verify_code, verify_code_expires"
     ).eq("id", current_user["id"]).execute()
@@ -115,7 +115,7 @@ async def verify_email_change(body: VerifyEmailChangeRequest, current_user = Dep
     return {"access_token": new_token, "token_type": "bearer"}
 
 @router.post("/me/request-delete")
-async def request_user_delete(current_user = Depends(get_current_user)):
+async def request_user_delete(current_user: UserResponse = Depends(get_current_user)):
     code, expires_at = generate_verification_code()
 
     supabase.table("users").update({
@@ -128,7 +128,7 @@ async def request_user_delete(current_user = Depends(get_current_user)):
     return {"message": "Código de confirmação enviado para o seu email."}
 
 @router.delete("/me", status_code=204)
-async def verify_user_deletion(body: DeleteAccountRequest, current_user = Depends(get_current_user)):
+async def verify_user_deletion(body: DeleteAccountRequest, current_user: UserResponse = Depends(get_current_user)):
     result = supabase.table("users").select(
         "verify_code, verify_code_expires"
     ).eq("id", current_user["id"]).execute()
