@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, AfterValidator
+from typing import Annotated
 
 PASSWORD_SPECIAL_CHARS = set('_-.@!#$%&*')
 USERNAME_SPECIAL_CHARS = set('-_.')
@@ -31,73 +32,57 @@ def validate_password(v: str) -> str:
     
     return v
 
+def validate_code(v: str) -> str:
+    if len(v) != 6 or not v.isdigit():
+        raise ValueError("O código deve conter exatamente 6 dígitos.")
+    
+    return v
+
+ValidUsername = Annotated[str, AfterValidator(validate_username)]
+ValidPassword = Annotated[str, AfterValidator(validate_password)]
+ValidCode = Annotated[str, AfterValidator(validate_code)]
+
 class RegisterRequest(BaseModel):
     email: EmailStr
-    username: str
-    password: str
+    username: ValidUsername
+    password: ValidPassword
 
-    @field_validator("password")
-    @classmethod
-    def password_valid(cls, v: str) -> str:
-        return validate_password(v)
-    
-    @field_validator("username")
-    @classmethod
-    def username_valid(cls, v: str) -> str:
-        return validate_username(v)
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: ValidPassword
 
 class UserResponse(BaseModel):
     id: str
     email: str
     username: str
-        
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
 
 class VerifyEmailRequest(BaseModel):
     email: EmailStr
-    code: str
+    code: ValidCode
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
 
 class UsernameChangeRequest(BaseModel):
-    username: str
-
-    @field_validator("username")
-    @classmethod
-    def username_valid(cls, v: str) -> str:
-        return validate_username(v)
+    username: ValidUsername
 
 class PasswordChangeRequest(BaseModel):
-    password: str
-    new_password: str
-
-    @field_validator("new_password")
-    @classmethod
-    def password_valid(cls, v: str) -> str:
-        return validate_password(v)
+    password: ValidPassword
+    new_password: ValidPassword
     
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
     
-
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    code: str
-    new_password: str
-
-    @field_validator("new_password")
-    @classmethod
-    def password_valid(cls, v: str) -> str:
-        return validate_password(v)
+    code: ValidCode
+    new_password: ValidPassword
 
 class EmailChangeRequest(BaseModel):
     new_email: EmailStr
 
 class VerifyEmailChangeRequest(BaseModel):
-    code: str
+    code: ValidCode
 
 class DeleteAccountRequest(BaseModel):
-    code: str
+    code: ValidCode
