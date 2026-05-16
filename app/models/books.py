@@ -1,4 +1,4 @@
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BaseModel, AfterValidator
 from typing import Annotated
 
 VALID_SUFFIXES = {"W", "M", "A"}
@@ -24,9 +24,9 @@ def validate_OLID(v: str) -> str:
         raise ValueError("OLID deve conter apenas números entre o 'OL' e o sufixo.")
     return v
 
-ValidOpinion = Annotated[str, BeforeValidator(validate_opinion)]
-ValidRating = Annotated[int, BeforeValidator(validate_rating)]
-ValidOLID = Annotated[str, BeforeValidator(validate_OLID)]
+ValidOpinion = Annotated[str, AfterValidator(validate_opinion)]
+ValidRating = Annotated[int, AfterValidator(validate_rating)]
+ValidOLID = Annotated[str, AfterValidator(validate_OLID)]
 
 class SearchBook(BaseModel):
     query: str
