@@ -90,3 +90,24 @@ def unverified_user(client):
 
     # limpa depois
     supabase.table("users").delete().eq("email", email).execute()
+
+
+@pytest.fixture
+def book_user_factory():
+    created_users = []
+
+    def _create(email, username, password="Senha123!"):
+        user = helpers.create_verified_user(email, username, password)
+        created_users.append(user)
+        return user
+
+    yield _create
+
+    for user in created_users:
+        helpers.cleanup_book_data(user["user_id"])
+        helpers.cleanup_user(user["email"])
+
+
+@pytest.fixture
+def mock_book_exists(monkeypatch):
+    helpers.mock_validate_book_exists(monkeypatch)

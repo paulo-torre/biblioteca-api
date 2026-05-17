@@ -7,12 +7,11 @@ from app.models.books import (
     ValidOLID,
     SearchBook,
     SaveBook,
-    DeleteBook,
-    RateBook,
-    EditRating,
-    DeleteRating,
-    ReviewBook,
-    EditReview,
+    UnsaveBook,
+    OpineBook,
+    EditOpinion,
+    DeleteOpinion,
+    PushReview,
     DeleteReview
 )
 from app.models.user import UserResponse
@@ -20,7 +19,6 @@ from app.models.user import UserResponse
 router = APIRouter()
 
 OPEN_LIBRARY_API_URL = "https://openlibrary.org"
-VALID_RATINGS = {"liked", "loved", "disliked"}
 
 async def validate_book_exists(book_id: ValidOLID):
     async with httpx.AsyncClient() as client:
@@ -32,7 +30,7 @@ async def validate_book_exists(book_id: ValidOLID):
             raise HTTPException(status_code=503, detail="Erro ao se comunicar com a Open Library.")
 
 
-@router.get("/search")
+@router.get("/search/{query}")
 async def search_books(body: SearchBook):
     if not body.query:
         raise HTTPException(status_code=400, detail="A string de busca não pode estar vazia.")
@@ -69,7 +67,7 @@ async def get_saved_book(current_user: UserResponse = Depends(get_current_user))
 @router.post("/saved")
 async def save_book(body: SaveBook, current_user: UserResponse = Depends(get_current_user)):
 
-    validate_book_exists(body.book_id)
+    await validate_book_exists(body.book_id)
 
     existing = supabase.table("saved_books").select("user_id", "book_id").eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
 
@@ -90,7 +88,7 @@ async def save_book(body: SaveBook, current_user: UserResponse = Depends(get_cur
         
 
 @router.delete("/saved/{book_id}")
-async def delete_book(body: DeleteBook, current_user: UserResponse = Depends(get_current_user)):
+async def delete_book(body: UnsaveBook, current_user: UserResponse = Depends(get_current_user)):
     
     result = supabase.table("saved_books").delete().eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
 
@@ -100,58 +98,53 @@ async def delete_book(body: DeleteBook, current_user: UserResponse = Depends(get
     return {"message": "Livro deletado com sucesso."}
 
 
-@router.get("/ratings")
-async def get_ratings(current_user: UserResponse = Depends(get_current_user)):
+@router.get("/opinions")
+async def get_opinions(current_user: UserResponse = Depends(get_current_user)):
 
-    result = supabase.table("book_ratings").select("book_id, rating").eq("user_id", current_user["id"]).execute()
-
-    if not result.data:
-        raise HTTPException(status_code=500, detail="Erro ao procurar livros avaliados.")
+    result = supabase.table("book_opinions").select("book_id, opinion").eq("user_id", current_user["id"]).execute()
 
     return {"data": result.data}
 
 
-@router.post("/ratings")
-async def rate_book(body: RateBook, current_user: UserResponse = Depends(get_current_user)):
+@router.post("/opinions")
+async def opine_book(body: OpineBook, current_user: UserResponse = Depends(get_current_user)):
 
-    validate_book_exists(body.book_id)
+    await validate_book_exists(body.book_id)
 
-    existing = supabase.table("book_ratings").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
+    existing = supabase.table("book_opinions").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
 
     if existing.data:
-        raise HTTPException(status_code=500, detail="Você já avaliou este livro, tente editar a sua avaliação.")
+        raise HTTPException(status_code=409, detail="Você já avaliou este livro, tente editar a sua avaliação.")
     
     
-    result = supabase.table("book_ratings").insert({
+    result = supabase.table("book_opinions").insert({
         "user_id": current_user["id"],
         "book_id": body.book_id,
-        "rating": body.rating,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "opinion": body.opinion,
+        "opined_at": datetime.now(timezone.utc).isoformat()
     }).execute()
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
     
-    return {"message": "Avaliação salva com sucesso."}
+    return {"message": "Avaliação salva com sucesso."}   
 
-        
+@router.put("/opinions")
+async def edit_book_opinion(body: EditOpinion, current_user: UserResponse = Depends(get_current_user)):
 
-@router.put("/ratings")
-async def edit_book_rating(body: EditRating, current_user: UserResponse = Depends(get_current_user)):
+    await validate_book_exists(body.book_id)
 
-    validate_book_exists(body.book_id)
-
-    existing = supabase.table("book_ratings").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
+    existing = supabase.table("book_opinions").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
 
     if not existing.data:
-        raise HTTPException(status_code=500, detail="Você ainda não avaliou este livro, tente adicionar uma avaliação.")
+        raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
     
     
-    result = supabase.table("book_ratings").update({
+    result = supabase.table("book_opinions").update({
         "user_id": current_user["id"],
         "book_id": body.book_id,
-        "rating": body.rating,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "opinion": body.opinion,
+        "opined_at": datetime.now(timezone.utc).isoformat()
     }).eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
 
     if not result.data:
@@ -159,11 +152,10 @@ async def edit_book_rating(body: EditRating, current_user: UserResponse = Depend
     
     return {"message": "Avaliação editada com sucesso.", "data": result.data}
         
-        
-@router.delete("/ratings/{book_id}")
-async def delete_rating(body: DeleteRating, current_user: UserResponse = Depends(get_current_user)):
+@router.delete("/opinions/{book_id}")
+async def delete_opinion(body: DeleteOpinion, current_user: UserResponse = Depends(get_current_user)):
 
-    result = supabase.table("book_ratings").delete().eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
+    result = supabase.table("book_opinions").delete().eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
@@ -173,9 +165,9 @@ async def delete_rating(body: DeleteRating, current_user: UserResponse = Depends
         
 
 @router.post("/reviews")
-async def review_book(body: ReviewBook, current_user: UserResponse = Depends(get_current_user)):
+async def review_book(body: PushReview, current_user: UserResponse = Depends(get_current_user)):
 
-    validate_book_exists(body.book_id)
+    await validate_book_exists(body.book_id)
 
     existing = supabase.table("book_reviews").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
 
@@ -187,7 +179,7 @@ async def review_book(body: ReviewBook, current_user: UserResponse = Depends(get
         "user_id": current_user["id"],
         "book_id": body.book_id,
         "rating": body.rating,
-        "comment": body.review,
+        "comment": body.comment,
         "created_at": datetime.now(timezone.utc).isoformat()
     }).execute()
 
@@ -198,21 +190,21 @@ async def review_book(body: ReviewBook, current_user: UserResponse = Depends(get
 
 
 @router.put("/reviews")
-async def edit_book_review(body: EditReview, current_user: UserResponse = Depends(get_current_user)):
+async def edit_book_review(body: PushReview, current_user: UserResponse = Depends(get_current_user)):
 
-    validate_book_exists(body.book_id)
+    await validate_book_exists(body.book_id)
 
     existing = supabase.table("book_reviews").select("id").eq("book_id", body.book_id).eq("user_id", current_user["id"]).execute()
 
     if not existing.data:
-        raise HTTPException(status_code=500, detail="Você ainda não avaliou este livro, tente adicionar uma avaliação.")
+        raise HTTPException(status_code=404, detail="Review não encontrada.")
     
     
     result = supabase.table("book_reviews").update({
         "user_id": current_user["id"],
         "book_id": body.book_id,
         "rating": body.rating,
-        "comment": body.review,
+        "comment": body.comment,
         "updated_at": datetime.now(timezone.utc).isoformat()
     }).eq("user_id", current_user["id"]).eq("book_id", body.book_id).execute()
 
@@ -237,12 +229,9 @@ async def delete_review(body: DeleteReview, current_user: UserResponse = Depends
 @router.get("/reviews/{book_id}")
 async def get_book_reviews(book_id: ValidOLID):
 
-    validate_book_exists(book_id)
+    await validate_book_exists(book_id)
 
     result = supabase.table("book_reviews").select("book_id, user_id, rating, comment").eq("book_id", book_id).execute()
-
-    if not result.data:
-        raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
 
     return {"data": result.data}
         
@@ -251,8 +240,5 @@ async def get_book_reviews(book_id: ValidOLID):
 async def get_user_reviews(current_user: UserResponse = Depends(get_current_user)):
 
     result = supabase.table("book_reviews").select("user_id, book_id, rating, comment").eq("user_id", current_user["id"]).execute()
-
-    if not result.data:
-        raise HTTPException(status_code=500, detail="Erro ao procurar reviews do livro.")
 
     return {"data": result.data}

@@ -19,7 +19,8 @@ app/
 ├── dependencies.py      # middleware de autenticação JWT
 ├── utils.py             # funções utilitárias (geração de código de verificação)
 ├── models/
-│   └── user.py          # modelos Pydantic de validação
+│   ├── books.py         # modelos Pydantic de validação da rota /api/books/
+│   └── user.py          # modelos Pydantic de validação da rota /api/user/
 ├── routers/
 │   ├── auth.py          # rotas de autenticação
 │   ├── books.py         # rotas de livros
@@ -31,9 +32,9 @@ tests/
 ├── conftest.py          # fixtures compartilhados entre testes
 ├── helpers.py           # funções auxiliares para os testes
 ├── auth/                # testes para a rota auth
-|   └── ...
+│   └── ...
 ├── books/               # testes para a rota books
-|   └── ...
+│   └── ...
 └── user/                # testes para a rota user
     └── ...
 pytest.ini               # configuração do pytest
@@ -114,7 +115,19 @@ pytest tests/ -v
 
 | Método | Rota | Auth | Descrição |
 |---|---|---|---|
-| GET | `/api/books/search` | ❌ | Busca livros na Open Library |
+| GET | `/api/books/search/{query}` | ❌ | Busca livros na Open Library |
+| GET | `/api/books/saved` | ✅ | Retorna todos os livros salvos pelo usuário logado |
+| POST | `/api/books/saved` | ✅ | Salva um livro na lista do usuário logado |
+| DELETE | `/api/books/saved/{book_id}` | ✅ | Deleta o livro da lista do usuário logado |
+| GET | `/api/books/opinions` | ✅ | Retorna as opiniões salvas do usuário logado |
+| POST | `/api/books/opinions` | ✅ | Salva uma opinião do usuário logado sobre um livro |
+| PUT | `/api/books/opinions` | ✅ | Edita a opinião do usuário logado sobre um livro |
+| DELETE | `/api/books/opinions` | ✅ | Deleta a opinião do usuário logado sobre um livro |
+| GET | `/api/books/reviews` | ✅ | Retorna as reviews salvas do usuário logado |
+| GET | `/api/books/reviews/{book_id}` | ❌ | Retorna todas as reviews salvas em um livro |
+| POST | `/api/books/reviews` | ✅ | Salva uma review do usuário logado sobre um livro |
+| PUT | `/api/books/reviews` | ✅ | Edita a review do usuário logado sobre um livro |
+| DELETE | `/api/books/reviews/{book_id}` | ✅ | Deleta a review do usuário logado sobre um livro |
 
 ## Autenticação
 
