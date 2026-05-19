@@ -69,7 +69,7 @@ def test_get_book_reviews_public_pagination(client, book_user_factory, mock_book
         "rev_public_pag@gmail.com", "revpublic_pag"
     )
     resp = client.get(
-        "/api/books/reviews/OL8080M?page=1&limit=2", headers=make_headers(user["token"])
+        "/api/books/reviews/OL8080M?page=1&size=2", headers=make_headers(user["token"])
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -77,11 +77,11 @@ def test_get_book_reviews_public_pagination(client, book_user_factory, mock_book
     assert len(data["data"]) == 2
 
 
-def test_get_book_reviews_public_pagination_invalid_limit(client, book_user_factory, mock_book_exists):
+def test_get_book_reviews_public_pagination_invalid_size(client, book_user_factory, mock_book_exists):
     user = book_user_factory("revpublic_invalid_lmt@gmail.com", "revpublic_invalid_lmt1")
     create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
     resp = client.get(
-        "/api/books/reviews/OL8080M?limit=999",
+        "/api/books/reviews/OL8080M?size=999",
         headers=make_headers(user["token"])
     )
     assert resp.status_code == 422
@@ -114,7 +114,7 @@ def test_get_book_reviews_pagination(client, book_user_factory, mock_book_exists
 
     user = book_user_factory("review_pag@gmail.com", "review_pag")
     resp = client.get(
-        "/api/books/reviews?page=1&limit=2", headers=make_headers(user["token"])
+        "/api/books/reviews?page=1&size=2", headers=make_headers(user["token"])
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -122,13 +122,13 @@ def test_get_book_reviews_pagination(client, book_user_factory, mock_book_exists
     assert len(data["data"]) == 2
 
 
-def test_get_book_reviews_pagination_invalid_limit(client, book_user_factory, mock_book_exists):
+def test_get_book_reviews_pagination_invalid_size(client, book_user_factory, mock_book_exists):
     user = book_user_factory(
         "review_invalid_lmt@gmail.com", "review_invalid_lmt1"
     )
     create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
     resp = client.get(
-        "/api/books/reviews?limit=999", headers=make_headers(user["token"])
+        "/api/books/reviews?size=999", headers=make_headers(user["token"])
     )
     assert resp.status_code == 422
 

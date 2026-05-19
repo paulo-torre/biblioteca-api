@@ -72,7 +72,7 @@ def test_get_book_opinions_pagination(client, book_user_factory, mock_book_exist
         create_opinion(client, user["token"], f"OL808{i}M", "loved")
 
     resp = client.get(
-        "/api/books/opinions?page=1&limit=2", headers=make_headers(user["token"])
+        "/api/books/opinions?page=1&size=2", headers=make_headers(user["token"])
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -80,13 +80,13 @@ def test_get_book_opinions_pagination(client, book_user_factory, mock_book_exist
     assert len(data["data"]) == 2
 
 
-def test_get_book_opinions_pagination_invalid_limit(client, book_user_factory, mock_book_exists):
+def test_get_book_opinions_pagination_invalid_size(client, book_user_factory, mock_book_exists):
     user = book_user_factory(
         "opinions_invalid_lmt@gmail.com", "opinions_invalid_lmt1"
     )
     create_opinion(client, user["token"], "OL8080M", "disliked")
     resp = client.get(
-        "/api/books/opinions?limit=999", headers=make_headers(user["token"])
+        "/api/books/opinions?size=999", headers=make_headers(user["token"])
     )
     assert resp.status_code == 422
 

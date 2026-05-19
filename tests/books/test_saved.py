@@ -41,17 +41,17 @@ def test_get_saved_books_pagination(client, book_user_factory, mock_book_exists)
         save_book(client, user["token"], book_id)
 
     resp = client.get(
-        "/api/books/saved?page=1&limit=2",
+        "/api/books/saved?page=1&size=2",
         headers=make_headers(user["token"])
     )
     assert resp.status_code == 200
     assert len(resp.json()["data"]) == 2
 
 
-def test_get_saved_books_invalid_limit(client, book_user_factory, mock_book_exists):
+def test_get_saved_books_invalid_size(client, book_user_factory, mock_book_exists):
     user = book_user_factory("save_list_invalid_lmt@gmail.com", "savelist_invalid_lmt1")
     resp = client.get(
-        "/api/books/saved?limit=999",
+        "/api/books/saved?size=999",
         headers=make_headers(user["token"])
     )
     assert resp.status_code == 422

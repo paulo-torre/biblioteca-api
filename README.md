@@ -129,6 +129,10 @@ pytest tests/ -v
 | PUT    | `/api/books/reviews`           | ✅    | Edita a review do usuário logado sobre um livro    |
 | DELETE | `/api/books/reviews/{book_id}` | ✅    | Deleta a review do usuário logado sobre um livro   |
 
+## Paginação
+
+Rotas que retornam listas de itens (ex: livros salvos, opiniões, reviews) suportam paginação via query params: `?page=1&size=10`
+
 ## Autenticação
 
 As rotas protegidas exigem o header:
