@@ -1,4 +1,4 @@
-from tests.helpers import save_book, delete_saved_book, make_headers
+from tests.helpers import delete_saved_book, make_headers, save_book
 
 
 def test_save_book_success(client, book_user_factory, mock_book_exists):
@@ -35,6 +35,35 @@ def test_get_saved_books(client, book_user_factory, mock_book_exists):
     assert "data" in data
 
 
+def test_get_saved_books_pagination(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("save_list_pag@gmail.com", "savelist_pag1")
+    for book_id in ("OL100010W", "OL100011W", "OL100012W"):
+        save_book(client, user["token"], book_id)
+
+    resp = client.get(
+        "/api/books/saved?page=1&limit=2",
+        headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 200
+    assert len(resp.json()["data"]) == 2
+
+
+def test_get_saved_books_invalid_limit(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("save_list_invalid_lmt@gmail.com", "savelist_invalid_lmt1")
+    resp = client.get(
+        "/api/books/saved?limit=999",
+        headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 422
+
+def test_get_saved_books_invalid_page(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("savelist_invalidpage@gmail.com", "savelist_invalidpage1")
+    resp = client.get(
+        "/api/books/saved?page=0",
+        headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 422
+
 def test_delete_saved_book_success(client, book_user_factory, mock_book_exists):
     user = book_user_factory("save_del@gmail.com", "savedel1")
     save_book(client, user["token"], "OL2222M")
@@ -49,5 +78,9 @@ def test_delete_saved_book_not_found(client, book_user_factory):
 
 
 def test_delete_saved_unauthorized(client):
-    resp = client.request("DELETE", "/api/books/saved/OL1111M", json={"book_id": "OL1111M"})
+    resp = client.request(
+        "DELETE",
+        "/api/books/saved/OL1111M",
+        json={"book_id": "OL1111M"}
+    )
     assert resp.status_code == 401

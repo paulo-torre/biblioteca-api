@@ -1,6 +1,7 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
+ast_serialize==0.5.0
 bcrypt==5.0.0
 cachetools==6.2.6
 certifi==2026.4.22
@@ -23,11 +24,15 @@ httpx==0.28.1
 hyperframe==6.1.0
 idna==3.13
 iniconfig==2.3.0
+librt==0.11.0
 markdown-it-py==4.0.0
 mdurl==0.1.2
 mmh3==5.2.1
 multidict==6.7.1
+mypy==2.1.0
+mypy_extensions==1.1.0
 packaging==26.2
+pathspec==1.1.1
 pluggy==1.6.0
 postgrest==2.29.0
 propcache==0.4.1
@@ -51,6 +56,7 @@ requests==2.33.1
 resend==2.29.0
 rich==14.3.4
 rsa==4.9.1
+ruff==0.15.13
 six==1.17.0
 starlette==1.0.0
 storage3==2.29.0
