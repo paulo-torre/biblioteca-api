@@ -2,6 +2,8 @@ from typing import Annotated, Optional, Self
 
 from pydantic import AfterValidator, BaseModel
 
+from app.models.common import PaginatedResponse
+
 VALID_SUFFIXES = {"W", "M", "A"}
 
 def validate_opinion(v: str) -> str:
@@ -91,3 +93,12 @@ class ReviewDTO(BaseModel):
             username=item["users"]["username"],
             created_at=item["created_at"],
         )
+
+
+class ReviewSummary(BaseModel):
+    average_rating: float
+    rating_distribution: dict[float, int]
+
+
+class PaginatedReviewResponse(PaginatedResponse[ReviewDTO]):
+    summary: ReviewSummary

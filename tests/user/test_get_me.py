@@ -12,10 +12,10 @@ def test_get_me_success(client):
     assert "username" in data
 
     assert "stats" in data
-    assert "saved_books" in data["stats"]
-    assert "reviews" in data["stats"]
-    assert "opinions" in data["stats"]
-    assert isinstance(data["stats"]["saved_books"], int)
+    assert "total_saved" in data["stats"]
+    assert "total_reviews" in data["stats"]
+    assert "total_opinions" in data["stats"]
+    assert isinstance(data["stats"]["total_saved"], int)
 
     assert "member_since" in data
 

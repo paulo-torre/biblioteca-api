@@ -14,14 +14,51 @@ from app.models.user import (
     EmailChangeRequest,
     VerifyEmailChangeRequest,
     PasswordChangeRequest,
-    DeleteAccountRequest
+    DeleteAccountRequest,
+    UserDTO,
 )
 
 router = APIRouter()
 
-@router.get("/me", response_model=UserResponse)
-async def get_user_data(current_user: UserResponse = Depends(get_current_user)):
-    return current_user
+@router.get("/me", response_model=UserDTO)
+async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
+    # Dados do usuário
+    user_result = supabase.table("users")\
+        .select("id, email, username, created_at")\
+        .eq("id", current_user.id)\
+        .single()\
+        .execute()
+
+    saved_result = supabase.table("saved_books")\
+        .select("id", count="exact")\
+        .eq("user_id", current_user.id)\
+        .execute()
+    saved_count: int = saved_result.count if saved_result.count else 0
+
+    opinions_result = supabase.table("book_opinions")\
+        .select("id", count="exact")\
+        .eq("user_id", current_user.id)\
+        .execute()
+    opinions_count: int = opinions_result.count if opinions_result.count else 0
+
+    reviews_result = supabase.table("book_reviews")\
+        .select("id", count="exact")\
+        .eq("user_id", current_user.id)\
+        .execute()
+    reviews_count: int = reviews_result.count if reviews_result.count else 0
+
+    user_data: dict = user_result.data
+    user_data["stats"] = {
+        "total_saved": saved_count,
+        "total_opinions": opinions_count,
+        "total_reviews": reviews_count
+    }
+    user_data["member_since"] = user_data.pop("created_at")
+
+    print(user_data)
+
+    return UserDTO(**user_data)
+
 
 @router.put("/me/username")
 async def username_change(body: UsernameChangeRequest, current_user: UserResponse = Depends(get_current_user)):

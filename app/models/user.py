@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, AfterValidator
+from pydantic import BaseModel, EmailStr, AfterValidator, PlainSerializer
 from typing import Annotated
 
 PASSWORD_SPECIAL_CHARS = set('_-.@!#$%&*')
@@ -86,3 +86,17 @@ class VerifyEmailChangeRequest(BaseModel):
 
 class DeleteAccountRequest(BaseModel):
     code: ValidCode
+
+
+class UserStats(BaseModel):
+    total_saved:  int
+    total_opinions: int
+    total_reviews: int
+
+
+class UserDTO(BaseModel):
+    id: str
+    email: str
+    username: str
+    stats: UserStats
+    member_since: str
