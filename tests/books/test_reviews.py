@@ -106,13 +106,10 @@ def test_get_user_reviews(client, book_user_factory, mock_book_exists):
 
 
 def test_get_book_reviews_pagination(client, book_user_factory, mock_book_exists):
-    for i in range(3):
-        user = book_user_factory(
-            f"review_pag{i + 1}@gmail.com",f"review_pag{i + 1}"
-        )
-        create_review(client, user["token"], "OL8080M", i, "Ruim")
-
     user = book_user_factory("review_pag@gmail.com", "review_pag")
+    for i in range(3):
+        create_review(client, user["token"], f"OL808{i}M", 2.5, "Ruim")
+
     resp = client.get(
         "/api/books/reviews?page=1&size=2", headers=make_headers(user["token"])
     )

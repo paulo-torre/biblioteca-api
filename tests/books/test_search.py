@@ -1,5 +1,4 @@
 import httpx
-import pytest
 
 
 class FakeResponse:
@@ -48,20 +47,15 @@ def test_search_success(monkeypatch, client):
 
     monkeypatch.setattr(httpx, "AsyncClient", _fake_factory)
 
-    response = client.request("GET", "/api/books/search/qualquer", json={"query": "qualquer"})
+    response = client.request("GET", "/api/books/search/qualquer")
     assert response.status_code == 200
     data = response.json()
     assert "results" in data
     assert isinstance(data["results"], list)
 
 
-def test_search_missing_body_returns_422(client):
-    response = client.get("/api/books/search/qualquer")
-    assert response.status_code == 422
-
-
 def test_search_empty_query_returns_400(client):
-    response = client.request("GET", "/api/books/search/qualquer", json={"query": ""})
+    response = client.request("GET", "/api/books/search/   ")
     assert response.status_code == 400
 
 
@@ -73,5 +67,5 @@ def test_search_openlibrary_request_error(monkeypatch, client):
 
     monkeypatch.setattr(httpx, "AsyncClient", _fake_factory)
 
-    response = client.request("GET", "/api/books/search/qualquer", json={"query": "qualquer"})
+    response = client.request("GET", "/api/books/search/qualquer")
     assert response.status_code == 503

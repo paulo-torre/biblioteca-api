@@ -1,5 +1,6 @@
-from pydantic import BaseModel, AfterValidator
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Self
+
+from pydantic import AfterValidator, BaseModel
 
 VALID_SUFFIXES = {"W", "M", "A"}
 
@@ -36,8 +37,6 @@ ValidRating = Annotated[float, AfterValidator(validate_rating)]
 ValidComment = Annotated[Optional[str], AfterValidator(validate_comment)]
 ValidOLID = Annotated[str, AfterValidator(validate_OLID)]
 
-class SearchBook(BaseModel):
-    query: str
 
 class SaveBook(BaseModel):
     book_id: ValidOLID
@@ -63,3 +62,32 @@ class PushReview(BaseModel):
 
 class DeleteReview(BaseModel):
     book_id: ValidOLID
+
+
+class SavedBookDTO(BaseModel):
+    book_id: str
+    saved_at: str
+
+
+class OpinionDTO(BaseModel):
+    book_id: str
+    opinion: str
+    opined_at: str
+
+
+class ReviewDTO(BaseModel):
+    book_id: str
+    rating: float
+    comment: str | None
+    username: str
+    created_at: str
+
+    @classmethod
+    def from_db(cls, item: dict) -> Self:
+        return cls(
+            book_id=item["book_id"],
+            rating=item["rating"],
+            comment=item["comment"],
+            username=item["users"]["username"],
+            created_at=item["created_at"],
+        )
