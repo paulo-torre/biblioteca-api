@@ -1,3 +1,5 @@
+import pytest
+
 from tests.helpers import create_review, delete_review, make_headers, update_review
 
 
@@ -61,20 +63,48 @@ def test_get_book_reviews_public(client, book_user_factory, mock_book_exists):
     assert "data" in data
 
 def test_get_book_reviews_public_pagination(client, book_user_factory, mock_book_exists):
-    for i in range(3):
-        user = book_user_factory(f"rev_public_pag{i+1}@gmail.com", f"revpublic_pag{i+1}")
-        create_review(client, user["token"], "OL8080M", 2.5, "Meh")
+    for i in range(1, 4):
+        user = book_user_factory(f"rev_public_pag{i+1}@gmail.com", f"revpub_pag{i+1}")
+        create_review(client, user["token"], "OL8080M", float(i), f"Review {i}")
 
-    user = book_user_factory(
-        "rev_public_pag@gmail.com", "revpublic_pag"
-    )
-    resp = client.get(
-        "/api/books/reviews/OL8080M?page=1&size=2", headers=make_headers(user["token"])
-    )
+    resp = client.get("/api/books/reviews/OL8080M?page=1&size=2")
     assert resp.status_code == 200
     data = resp.json()
+
     assert "data" in data
+    assert "page" in data
+    assert "size" in data
+    assert "total" in data
     assert len(data["data"]) == 2
+
+    assert "summary" in data
+    assert "total_reviews" in data["summary"]
+    assert "average_rating" in data["summary"]
+    assert "rating_distribution" in data["summary"]
+
+    assert data["summary"]["total_reviews"] == 3
+    assert data["summary"]["average_rating"] == 2.0  # (1+2+3)/3
+    assert data["summary"]["rating_distribution"]["1"] == 1
+    assert data["summary"]["rating_distribution"]["2"] == 1
+    assert data["summary"]["rating_distribution"]["3"] == 1
+
+
+def test_get_book_reviews_summary_accuracy(client, book_user_factory, mock_book_exists):
+    user1 = book_user_factory("rev_sum1@gmail.com", "revsummary1")
+    user2 = book_user_factory("rev_sum2@gmail.com", "revsummary2")
+    user3 = book_user_factory("rev_sum3@gmail.com", "revsummary3")
+    
+    create_review(client, user1["token"], "OL9999M", 5, "Excelente")
+    create_review(client, user2["token"], "OL9999M", 5, "Muito bom")
+    create_review(client, user3["token"], "OL9999M", 4, "Bom")
+
+    response = client.get("/api/books/reviews/OL9999M")
+    data = response.json()
+
+    # Average: (5+5+4)/3 = 4.67
+    assert data["summary"]["average_rating"] == pytest.approx(4.67, abs=0.01)
+    assert data["summary"]["rating_distribution"]["5"] == 2
+    assert data["summary"]["rating_distribution"]["4"] == 1
 
 
 def test_get_book_reviews_public_pagination_invalid_size(client, book_user_factory, mock_book_exists):
