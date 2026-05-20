@@ -95,3 +95,12 @@ class ReviewDTO(BaseModel):
             username=item["users"]["username"],
             created_at=item["created_at"],
         )
+
+
+class ReviewSummary(BaseModel):
+    average_rating: float
+    rating_distribution: dict[float, int]
+
+
+class PaginatedReviewResponse(PaginatedResponse[ReviewDTO]):
+    summary: ReviewSummary

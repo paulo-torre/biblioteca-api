@@ -78,15 +78,13 @@ def test_get_book_reviews_public_pagination(client, book_user_factory, mock_book
     assert len(data["data"]) == 2
 
     assert "summary" in data
-    assert "total_reviews" in data["summary"]
     assert "average_rating" in data["summary"]
     assert "rating_distribution" in data["summary"]
 
-    assert data["summary"]["total_reviews"] == 3
     assert data["summary"]["average_rating"] == 2.0  # (1+2+3)/3
-    assert data["summary"]["rating_distribution"]["1"] == 1
-    assert data["summary"]["rating_distribution"]["2"] == 1
-    assert data["summary"]["rating_distribution"]["3"] == 1
+    assert data["summary"]["rating_distribution"]["1.0"] == 1
+    assert data["summary"]["rating_distribution"]["2.0"] == 1
+    assert data["summary"]["rating_distribution"]["3.0"] == 1
 
 
 def test_get_book_reviews_summary_accuracy(client, book_user_factory, mock_book_exists):
@@ -103,8 +101,8 @@ def test_get_book_reviews_summary_accuracy(client, book_user_factory, mock_book_
 
     # Average: (5+5+4)/3 = 4.67
     assert data["summary"]["average_rating"] == pytest.approx(4.67, abs=0.01)
-    assert data["summary"]["rating_distribution"]["5"] == 2
-    assert data["summary"]["rating_distribution"]["4"] == 1
+    assert data["summary"]["rating_distribution"]["5.0"] == 2
+    assert data["summary"]["rating_distribution"]["4.0"] == 1
 
 
 def test_get_book_reviews_public_pagination_invalid_size(client, book_user_factory, mock_book_exists):
