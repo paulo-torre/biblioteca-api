@@ -1,4 +1,3 @@
-import os
 import bcrypt
 from fastapi import Depends, Response, APIRouter, HTTPException
 
@@ -25,28 +24,35 @@ router = APIRouter()
 @router.get("/me", response_model=UserDTO)
 async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
     # Dados do usuário
-    user_result = supabase.table("users")\
-        .select("id, email, username, created_at")\
-        .eq("id", current_user.id)\
-        .single()\
-        .execute()
+    user_result: APIResponse = await run_query(
+        supabase.table("users")\
+            .select("id, email, username, created_at")\
+            .eq("id", current_user.id)\
+            .single()\
+            .execute
+    )
 
-    saved_result = supabase.table("saved_books")\
-        .select("id", count="exact")\
-        .eq("user_id", current_user.id)\
-        .execute()
+    saved_result: APIResponse = await run_query(
+        supabase.table("saved_books")\
+            .select("id", count="exact")\
+            .eq("user_id", current_user.id)\
+            .execute
+    )
     saved_count: int = saved_result.count if saved_result.count else 0
-
-    opinions_result = supabase.table("book_opinions")\
-        .select("id", count="exact")\
-        .eq("user_id", current_user.id)\
-        .execute()
+    opinions_result: APIResponse = await run_query(
+        supabase.table("book_opinions")\
+            .select("id", count="exact")\
+            .eq("user_id", current_user.id)\
+            .execute
+    )
     opinions_count: int = opinions_result.count if opinions_result.count else 0
 
-    reviews_result = supabase.table("book_reviews")\
-        .select("id", count="exact")\
-        .eq("user_id", current_user.id)\
-        .execute()
+    reviews_result: APIResponse = await run_query(
+        supabase.table("book_reviews")\
+            .select("id", count="exact")\
+            .eq("user_id", current_user.id)\
+            .execute
+    )
     reviews_count: int = reviews_result.count if reviews_result.count else 0
 
     user_data: dict = user_result.data

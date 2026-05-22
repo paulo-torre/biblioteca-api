@@ -13,7 +13,7 @@ from app.models.books import (
     SavedBookDTO,
     OpinionDTO,
     ReviewDTO,
-    PaginatedReviewResponse,
+    PaginatedPublicReviewsResponse,
     ReviewSummary,
 )
 from app.models.common import PaginatedResponse
@@ -311,7 +311,7 @@ async def delete_review(book_id: ValidOLID, current_user: UserResponse = Depends
     return {"message": "Review removida com sucesso."}
         
 
-@router.get("/reviews/{book_id}", response_model=PaginatedReviewResponse)
+@router.get("/reviews/{book_id}", response_model=PaginatedPublicReviewsResponse)
 async def get_book_reviews(
         book_id: ValidOLID,
         page: int = Query(1, ge=1),
@@ -329,10 +329,12 @@ async def get_book_reviews(
     total = result.count if result.count else 0
     reviews = [ReviewDTO.from_db(item) for item in result.data]
 
-    all_reviews = supabase.table("book_reviews")\
-        .select("rating")\
-        .eq("book_id", book_id)\
-        .execute()
+    all_reviews: APIResponse = await run_query(
+        supabase.table("book_reviews")\
+            .select("rating")\
+            .eq("book_id", book_id)\
+            .execute
+    )
     ratings = [item["rating"] for item in all_reviews.data]
     average_rating = sum(ratings) / len(ratings) if ratings else 0
     
@@ -345,7 +347,7 @@ async def get_book_reviews(
         rating_distribution=rating_distribution
     )
 
-    return PaginatedReviewResponse(
+    return PaginatedPublicReviewsResponse(
         data=reviews,
         page=page,
         size=size,

@@ -102,5 +102,5 @@ class ReviewSummary(BaseModel):
     rating_distribution: dict[float, int]
 
 
-class PaginatedReviewResponse(PaginatedResponse[ReviewDTO]):
+class PaginatedPublicReviewsResponse(PaginatedResponse[ReviewDTO]):
     summary: ReviewSummary
