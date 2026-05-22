@@ -32,12 +32,12 @@ async def username_change(body: UsernameChangeRequest, current_user: UserRespons
     
     result = supabase.table("users").update({
         "username": body.username
-    }).eq("id", current_user["id"]).execute()
+    }).eq("id", current_user.id).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
     
-    new_token = create_access_token(current_user["id"], current_user["email"], body.username)
+    new_token = create_access_token(current_user.id, current_user.email, body.username)
 
     return {"access_token": new_token, "token_type": "bearer"}
 
@@ -55,7 +55,7 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
         "pending_email": body.new_email,
         "verify_code": code,
         "verify_code_expires": expires_at.isoformat(),
-    }).eq("id", current_user["id"]).execute()
+    }).eq("id", current_user.id).execute()
 
     send_email_change_email(body.new_email, code)
 
@@ -63,7 +63,7 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
 
 @router.put("/me/password")
 async def request_password_change(body: PasswordChangeRequest, current_user: UserResponse = Depends(get_current_user)):
-    result = supabase.table("users").select("password").eq("id", current_user["id"]).execute()
+    result = supabase.table("users").select("password").eq("id", current_user.id).execute()
     user = result.data[0]
 
     password_matches = bcrypt.checkpw(
@@ -78,7 +78,7 @@ async def request_password_change(body: PasswordChangeRequest, current_user: Use
 
     result = supabase.table("users").update({
         "password": hashed_new_password.decode("utf-8")
-    }).eq("id", current_user["id"]).execute()
+    }).eq("id", current_user.id).execute()
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao alterar senha.")
@@ -91,7 +91,7 @@ async def request_password_change(body: PasswordChangeRequest, current_user: Use
 async def verify_email_change(body: VerifyEmailChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     result = supabase.table("users").select(
         "pending_email, verify_code, verify_code_expires"
-    ).eq("id", current_user["id"]).execute()
+    ).eq("id", current_user.id).execute()
 
     user = result.data[0]
     now = datetime.now(timezone.utc)
@@ -108,9 +108,9 @@ async def verify_email_change(body: VerifyEmailChangeRequest, current_user: User
         "pending_email": None,
         "verify_code": None,
         "verify_code_expires": None,
-    }).eq("id", current_user["id"]).execute()
+    }).eq("id", current_user.id).execute()
 
-    new_token = create_access_token(current_user["id"], user["pending_email"], current_user["username"])
+    new_token = create_access_token(current_user.id, user["pending_email"], current_user.username)
 
     return {"access_token": new_token, "token_type": "bearer"}
 
@@ -121,9 +121,9 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
     supabase.table("users").update({
         "verify_code": code,
         "verify_code_expires": expires_at.isoformat(),
-    }).eq("id", current_user["id"]).execute()
+    }).eq("id", current_user.id).execute()
 
-    send_delete_confirmation(current_user["email"], code)
+    send_delete_confirmation(current_user.email, code)
 
     return {"message": "Código de confirmação enviado para o seu email."}
 
@@ -131,7 +131,7 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
 async def verify_user_deletion(body: DeleteAccountRequest, current_user: UserResponse = Depends(get_current_user)):
     result = supabase.table("users").select(
         "verify_code, verify_code_expires"
-    ).eq("id", current_user["id"]).execute()
+    ).eq("id", current_user.id).execute()
 
     user = result.data[0]
     now = datetime.now(timezone.utc)
@@ -143,7 +143,7 @@ async def verify_user_deletion(body: DeleteAccountRequest, current_user: UserRes
     if now > expires_at:
         raise HTTPException(status_code=400, detail="Código expirado.")
 
-    result = supabase.table("users").delete().eq("id", current_user["id"]).execute()
+    result = supabase.table("users").delete().eq("id", current_user.id).execute()
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao deletar usuário.")
