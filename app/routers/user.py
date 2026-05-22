@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import bcrypt
 from fastapi import Depends, Response, APIRouter, HTTPException
 
@@ -9,15 +10,27 @@ from app.database import run_query, supabase
 from app.dependencies import create_access_token, get_current_user
 from app.services.email import send_email_change_email, send_delete_confirmation
 from app.utils.verification_code import generate_verification_code
+=======
+import os
+from datetime import datetime, timezone
+
+import bcrypt
+from fastapi import APIRouter, Depends, HTTPException, Response
+
+import app.services.email as email_service
+from app.database import supabase
+from app.dependencies import create_access_token, get_current_user
+>>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
 from app.models.user import (
-    UserResponse,
-    UsernameChangeRequest,
-    EmailChangeRequest,
-    VerifyEmailChangeRequest,
-    PasswordChangeRequest,
     DeleteAccountRequest,
+    EmailChangeRequest,
+    PasswordChangeRequest,
     UserDTO,
+    UsernameChangeRequest,
+    UserResponse,
+    VerifyEmailChangeRequest,
 )
+from app.utils import generate_verification_code
 
 router = APIRouter()
 
@@ -62,8 +75,6 @@ async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
         "total_reviews": reviews_count
     }
     user_data["member_since"] = user_data.pop("created_at")
-
-    print(user_data)
 
     return UserDTO(**user_data)
 
@@ -116,7 +127,7 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
     if not update_result.data:
         HTTPException(status_code=500, detail="Erro na criação do código de verificação.")
 
-    send_email_change_email(body.new_email, code)
+    email_service.send_email_change_email(body.new_email, code)
 
     return {"message": "Código enviado para o novo email."}
 
@@ -196,10 +207,14 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
         }).eq("id", current_user.id).execute
     )
 
+<<<<<<< HEAD
     if not update_result.data:
         HTTPException(status_code=500, detail="Erro na criação do código de verificação.")
 
     send_delete_confirmation(current_user.email, code)
+=======
+    email_service.send_delete_confirmation(current_user["email"], code)
+>>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
 
     return {"message": "Código de confirmação enviado para o seu email."}
 
