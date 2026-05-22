@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, AfterValidator, PlainSerializer
 from typing import Annotated
+
+from pydantic import AfterValidator, BaseModel, EmailStr
 
 PASSWORD_SPECIAL_CHARS = set('_-.@!#$%&*')
 USERNAME_SPECIAL_CHARS = set('-_.')

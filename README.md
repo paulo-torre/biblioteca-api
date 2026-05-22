@@ -133,6 +133,100 @@ pytest tests/ -v
 
 Rotas que retornam listas de itens (ex: livros salvos, opiniões, reviews) suportam paginação via query params: `?page=1&size=10`
 
+## Padrão de Responses
+
+### Status code
+- **Sucesso:** status code 200 ou 201, com JSON contendo os dados solicitados ou mensagem de sucesso.
+- **Erro de validação:** status code 422, com JSON detalhando os erros de validação.
+- **Erro de autenticação:** status code 401.
+- **Erro de autorização:** status code 403.
+- **Erro de recurso não encontrado:** status code 404.
+- **Erro de servidor:** status code 500.
+- **Erros específicos de negócio:** (ex: email já cadastrado, código de verificação inválido) status code 400 com mensagens descritivas.
+
+### Rotas paginadas
+
+#### Rota `GET /api/books/saved`
+```json
+{
+  "data": [
+    {
+      "book_id": "OL8080M",
+      "saved-at": "2024-06-01T12:00:00Z",
+    },
+    ...
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 100
+}
+```
+
+#### Rota `GET /api/books/opinions`
+```json
+{
+  "data": [
+    {
+      "book_id": "OL8080M",
+      "opinion": "Gostei muito desse livro, recomendo!",
+      "opined_at": "2024-06-01T12:00:00Z"
+    },
+    ...
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 50
+}
+```
+
+#### Rota `GET /api/books/reviews/{book_id}`
+```json
+{
+  "data": [
+    {
+      "book_id": "OL8080M",
+      "rating": 5,
+      "comment": "Excepcional!",
+      "username": "pedrocnog",
+      "created_at": "2024-06-01T12:00:00Z"
+    },
+    ...
+  ],
+  "summary": {
+    "average_rating": 4.21,
+    "rating_distribution": {
+      "1.0": 2,
+      "3.0": 1,
+      "4.0": 5,
+      "4.5": 3,
+      "5.0": 10
+    }
+  },
+  "page": 1,
+  "size": 20,
+  "total": 30
+}
+```
+
+#### Rota `GET /api/books/reviews`
+```json
+{
+  "data": [
+    {
+      "book_id": "OL8080M",
+      "rating": 5,
+      "comment": "Excepcional!",
+      "username": "pedrocnog",
+      "created_at": "2024-06-01T12:00:00Z"
+    },
+    ...
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 30
+}
+```
+
 ## Autenticação
 
 As rotas protegidas exigem o header:

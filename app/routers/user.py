@@ -1,22 +1,22 @@
 import os
-import bcrypt
-from fastapi import Depends, Response, APIRouter, HTTPException
-
 from datetime import datetime, timezone
 
+import bcrypt
+from fastapi import APIRouter, Depends, HTTPException, Response
+
+import app.services.email as email_service
 from app.database import supabase
 from app.dependencies import create_access_token, get_current_user
-from app.services.email import send_email_change_email, send_delete_confirmation
-from app.utils import generate_verification_code
 from app.models.user import (
-    UserResponse,
-    UsernameChangeRequest,
-    EmailChangeRequest,
-    VerifyEmailChangeRequest,
-    PasswordChangeRequest,
     DeleteAccountRequest,
+    EmailChangeRequest,
+    PasswordChangeRequest,
     UserDTO,
+    UsernameChangeRequest,
+    UserResponse,
+    VerifyEmailChangeRequest,
 )
+from app.utils import generate_verification_code
 
 router = APIRouter()
 
@@ -55,8 +55,6 @@ async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
     }
     user_data["member_since"] = user_data.pop("created_at")
 
-    print(user_data)
-
     return UserDTO(**user_data)
 
 
@@ -94,7 +92,7 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
         "verify_code_expires": expires_at.isoformat(),
     }).eq("id", current_user["id"]).execute()
 
-    send_email_change_email(body.new_email, code)
+    email_service.send_email_change_email(body.new_email, code)
 
     return {"message": "Código enviado para o novo email."}
 
@@ -160,7 +158,7 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
         "verify_code_expires": expires_at.isoformat(),
     }).eq("id", current_user["id"]).execute()
 
-    send_delete_confirmation(current_user["email"], code)
+    email_service.send_delete_confirmation(current_user["email"], code)
 
     return {"message": "Código de confirmação enviado para o seu email."}
 
