@@ -158,7 +158,7 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
         "verify_code_expires": expires_at.isoformat(),
     }).eq("id", current_user.id).execute()
 
-    email_service.send_delete_confirmation(current_user["email"], code)
+    email_service.send_delete_confirmation(current_user.email, code)
 
     return {"message": "Código de confirmação enviado para o seu email."}
 
