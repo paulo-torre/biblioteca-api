@@ -90,44 +90,48 @@ pytest tests/ -v
 
 ### Autenticação (`/api/auth`)
 
-| Método | Rota | Auth | Descrição |
-|---|---|---|---|
-| POST | `/api/auth/register` | ❌ | Cadastro de usuário — envia código de verificação por email |
-| POST | `/api/auth/verify-email` | ❌ | Valida o código de verificação e ativa a conta |
-| POST | `/api/auth/resend-verification` | ❌ | Reenvia o código de verificação |
-| POST | `/api/auth/forgot-password` | ❌ | Envia código de confirmação para o email |
-| PUT | `/api/auth/reset-password` | ❌ | Valida o código de confirmação e redefine a senha |
-| POST | `/api/auth/login` | ❌ | Login — retorna JWT |
+| Método | Rota                            | Auth | Descrição                                                   |
+|--------|---------------------------------|------|-------------------------------------------------------------|
+| POST   | `/api/auth/register`            | ❌    | Cadastro de usuário — envia código de verificação por email |
+| POST   | `/api/auth/verify-email`        | ❌    | Valida o código de verificação e ativa a conta              |
+| POST   | `/api/auth/resend-verification` | ❌    | Reenvia o código de verificação                             |
+| POST   | `/api/auth/forgot-password`     | ❌    | Envia código de confirmação para o email                    |
+| PUT    | `/api/auth/reset-password`      | ❌    | Valida o código de confirmação e redefine a senha           |
+| POST   | `/api/auth/login`               | ❌    | Login — retorna JWT                                         |
 
 ### Usuário (`/api/user`)
 
-| Método | Rota | Auth | Descrição |
-|---|---|---|---|
-| GET | `/api/user/me` | ✅ | Retorna os dados do usuário logado |
-| PUT | `/api/user/me/username` | ✅ | Altera o username |
-| PUT | `/api/user/me/email` | ✅ | Solicita troca de email — envia código para o novo endereço |
-| POST | `/api/user/me/verify-email-change` | ✅ | Confirma a troca de email via código |
-| PUT | `/api/user/me/password` | ✅ | Altera a senha — exige senha atual |
-| POST | `/api/user/me/request-delete` | ✅ | Solicita exclusão da conta — envia código por email |
-| DELETE | `/api/user/me` | ✅ | Confirma e executa a exclusão da conta |
+| Método | Rota                               | Auth | Descrição                                                   |
+|--------|------------------------------------|------|-------------------------------------------------------------|
+| GET    | `/api/user/me`                     | ✅    | Retorna os dados do usuário logado                          |
+| PUT    | `/api/user/me/username`            | ✅    | Altera o username                                           |
+| PUT    | `/api/user/me/email`               | ✅    | Solicita troca de email — envia código para o novo endereço |
+| POST   | `/api/user/me/verify-email-change` | ✅    | Confirma a troca de email via código                        |
+| PUT    | `/api/user/me/password`            | ✅    | Altera a senha — exige senha atual                          |
+| POST   | `/api/user/me/request-delete`      | ✅    | Solicita exclusão da conta — envia código por email         |
+| DELETE | `/api/user/me`                     | ✅    | Confirma e executa a exclusão da conta                      |
 
 ### Livros (`/api/books`)
 
-| Método | Rota | Auth | Descrição |
-|---|---|---|---|
-| GET | `/api/books/search/{query}` | ❌ | Busca livros na Open Library |
-| GET | `/api/books/saved` | ✅ | Retorna todos os livros salvos pelo usuário logado |
-| POST | `/api/books/saved` | ✅ | Salva um livro na lista do usuário logado |
-| DELETE | `/api/books/saved/{book_id}` | ✅ | Deleta o livro da lista do usuário logado |
-| GET | `/api/books/opinions` | ✅ | Retorna as opiniões salvas do usuário logado |
-| POST | `/api/books/opinions` | ✅ | Salva uma opinião do usuário logado sobre um livro |
-| PUT | `/api/books/opinions` | ✅ | Edita a opinião do usuário logado sobre um livro |
-| DELETE | `/api/books/opinions` | ✅ | Deleta a opinião do usuário logado sobre um livro |
-| GET | `/api/books/reviews` | ✅ | Retorna as reviews salvas do usuário logado |
-| GET | `/api/books/reviews/{book_id}` | ❌ | Retorna todas as reviews salvas em um livro |
-| POST | `/api/books/reviews` | ✅ | Salva uma review do usuário logado sobre um livro |
-| PUT | `/api/books/reviews` | ✅ | Edita a review do usuário logado sobre um livro |
-| DELETE | `/api/books/reviews/{book_id}` | ✅ | Deleta a review do usuário logado sobre um livro |
+| Método | Rota                           | Auth | Descrição                                          |
+|--------|--------------------------------|------|----------------------------------------------------|
+| GET    | `/api/books/search/{query}`    | ❌    | Busca livros na Open Library                       |
+| GET    | `/api/books/saved`             | ✅    | Retorna todos os livros salvos pelo usuário logado |
+| POST   | `/api/books/saved`             | ✅    | Salva um livro na lista do usuário logado          |
+| DELETE | `/api/books/saved/{book_id}`   | ✅    | Deleta o livro da lista do usuário logado          |
+| GET    | `/api/books/opinions`          | ✅    | Retorna as opiniões salvas do usuário logado       |
+| POST   | `/api/books/opinions`          | ✅    | Salva uma opinião do usuário logado sobre um livro |
+| PUT    | `/api/books/opinions`          | ✅    | Edita a opinião do usuário logado sobre um livro   |
+| DELETE | `/api/books/opinions`          | ✅    | Deleta a opinião do usuário logado sobre um livro  |
+| GET    | `/api/books/reviews`           | ✅    | Retorna as reviews salvas do usuário logado        |
+| GET    | `/api/books/reviews/{book_id}` | ❌    | Retorna todas as reviews salvas em um livro        |
+| POST   | `/api/books/reviews`           | ✅    | Salva uma review do usuário logado sobre um livro  |
+| PUT    | `/api/books/reviews`           | ✅    | Edita a review do usuário logado sobre um livro    |
+| DELETE | `/api/books/reviews/{book_id}` | ✅    | Deleta a review do usuário logado sobre um livro   |
+
+## Paginação
+
+Rotas que retornam listas de itens (ex: livros salvos, opiniões, reviews) suportam paginação via query params: `?page=1&size=10`
 
 ## Autenticação
 

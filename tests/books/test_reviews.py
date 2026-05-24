@@ -1,4 +1,4 @@
-from tests.helpers import create_review, update_review, delete_review, make_headers
+from tests.helpers import create_review, delete_review, make_headers, update_review
 
 
 def test_create_review_success(client, book_user_factory, mock_book_exists):
@@ -60,6 +60,41 @@ def test_get_book_reviews_public(client, book_user_factory, mock_book_exists):
     data = resp.json()
     assert "data" in data
 
+def test_get_book_reviews_public_pagination(client, book_user_factory, mock_book_exists):
+    for i in range(3):
+        user = book_user_factory(f"rev_public_pag{i+1}@gmail.com", f"revpublic_pag{i+1}")
+        create_review(client, user["token"], "OL8080M", 2.5, "Meh")
+
+    user = book_user_factory(
+        "rev_public_pag@gmail.com", "revpublic_pag"
+    )
+    resp = client.get(
+        "/api/books/reviews/OL8080M?page=1&size=2", headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "data" in data
+    assert len(data["data"]) == 2
+
+
+def test_get_book_reviews_public_pagination_invalid_size(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("revpublic_invalid_lmt@gmail.com", "revpublic_invalid_lmt1")
+    create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
+    resp = client.get(
+        "/api/books/reviews/OL8080M?size=999",
+        headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 422
+
+def test_get_book_reviews_public_pagination_invalid_page(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("revpublic_invalidpage@gmail.com", "revpublic_invalidpage1")
+    create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
+    resp = client.get(
+        "/api/books/reviews/OL8080M?page=0",
+        headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 422
+
 
 def test_get_user_reviews(client, book_user_factory, mock_book_exists):
     user = book_user_factory("rev_user_list@gmail.com", "revuserlist1")
@@ -68,3 +103,37 @@ def test_get_user_reviews(client, book_user_factory, mock_book_exists):
     assert resp.status_code == 200
     data = resp.json()
     assert "data" in data
+
+
+def test_get_book_reviews_pagination(client, book_user_factory, mock_book_exists):
+    user = book_user_factory("review_pag@gmail.com", "review_pag")
+    for i in range(3):
+        create_review(client, user["token"], f"OL808{i}M", 2.5, "Ruim")
+
+    resp = client.get(
+        "/api/books/reviews?page=1&size=2", headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "data" in data
+    assert len(data["data"]) == 2
+
+
+def test_get_book_reviews_pagination_invalid_size(client, book_user_factory, mock_book_exists):
+    user = book_user_factory(
+        "review_invalid_lmt@gmail.com", "review_invalid_lmt1"
+    )
+    create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
+    resp = client.get(
+        "/api/books/reviews?size=999", headers=make_headers(user["token"])
+    )
+    assert resp.status_code == 422
+
+
+def test_get_book_reviews_pagination_invalid_page(client, book_user_factory, mock_book_exists):
+    user = book_user_factory(
+        "review_invalidpage@gmail.com", "review_invalidpage1"
+    )
+    create_review(client, user["token"], "OL8080M", 4.5, "Muito bom")
+    resp = client.get("/api/books/reviews?page=0", headers=make_headers(user["token"]))
+    assert resp.status_code == 422
