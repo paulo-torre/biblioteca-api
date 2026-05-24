@@ -68,11 +68,26 @@ class SavedBookDTO(BaseModel):
     book_id: str
     saved_at: str
 
+    @classmethod
+    def from_db(cls, item: dict) -> Self:
+        return cls(
+            book_id=item["book_id"],
+            saved_at=item["saved_at"]
+        )
+
 
 class OpinionDTO(BaseModel):
     book_id: str
     opinion: str
     opined_at: str
+
+    @classmethod
+    def from_db(cls, item: dict) -> Self:
+        return cls(
+            book_id=item["book_id"],
+            opinion=item["opinion"],
+            opined_at=item["opined_at"]
+        )
 
 
 class ReviewDTO(BaseModel):

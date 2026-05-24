@@ -81,7 +81,8 @@ async def get_saved_book(
         .execute()
     
     total = result.count if result.count else 0
-    data = [SavedBookDTO(**item) for item in result.data]
+    data = [SavedBookDTO.from_db(item) for item in result.data]
+
     return PaginatedResponse(
         data=data,
         page=page,
@@ -139,7 +140,7 @@ async def get_opinions(
         .execute()
     
     total = result.count if result.count else 0
-    data = [OpinionDTO(**item) for item in result.data]
+    data = [OpinionDTO.from_db(item) for item in result.data]
     return PaginatedResponse(
         data=data,
         page=page,
