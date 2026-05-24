@@ -117,7 +117,7 @@ pytest tests/ -v
 |--------|--------------------------------|------|----------------------------------------------------|
 | GET    | `/api/books/search/{query}`    | ❌    | Busca livros na Open Library                       |
 | GET    | `/api/books/saved`             | ✅    | Retorna todos os livros salvos pelo usuário logado |
-| POST   | `/api/books/saved`             | ✅    | Salva um livro na lista do usuário logado          |
+| POST   | `/api/books/saved/{book_id}`             | ✅    | Salva um livro na lista do usuário logado          |
 | DELETE | `/api/books/saved/{book_id}`   | ✅    | Deleta o livro da lista do usuário logado          |
 | GET    | `/api/books/opinions`          | ✅    | Retorna as opiniões salvas do usuário logado       |
 | POST   | `/api/books/opinions`          | ✅    | Salva uma opinião do usuário logado sobre um livro |
