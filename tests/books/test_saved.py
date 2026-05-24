@@ -8,7 +8,7 @@ def test_save_book_success(client, book_user_factory, mock_book_exists):
 
 
 def test_save_book_unauthorized(client):
-    resp = client.post("/api/books/saved", json={"book_id": "OL1234M"})
+    resp = client.post("/api/books/saved/OL1234M")
     assert resp.status_code == 401
 
 

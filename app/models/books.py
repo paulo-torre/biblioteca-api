@@ -2,6 +2,8 @@ from typing import Annotated, Optional, Self
 
 from pydantic import AfterValidator, BaseModel
 
+from app.models.common import PaginatedResponse
+
 VALID_SUFFIXES = {"W", "M", "A"}
 
 def validate_opinion(v: str) -> str:
@@ -38,12 +40,6 @@ ValidComment = Annotated[Optional[str], AfterValidator(validate_comment)]
 ValidOLID = Annotated[str, AfterValidator(validate_OLID)]
 
 
-class SaveBook(BaseModel):
-    book_id: ValidOLID
-
-class UnsaveBook(BaseModel):
-    book_id: ValidOLID
-
 class OpineBook(BaseModel):
     book_id: ValidOLID
     opinion: ValidOpinion
@@ -51,18 +47,11 @@ class OpineBook(BaseModel):
 class EditOpinion(BaseModel):
     book_id: ValidOLID
     opinion: ValidOpinion
-    
-class DeleteOpinion(BaseModel):
-    book_id: ValidOLID
-    
+
 class PushReview(BaseModel):
     book_id: ValidOLID
     rating: ValidRating
     comment: ValidComment = None
-
-class DeleteReview(BaseModel):
-    book_id: ValidOLID
-
 
 class SavedBookDTO(BaseModel):
     book_id: str

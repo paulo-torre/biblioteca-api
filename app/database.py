@@ -1,4 +1,7 @@
 import os
+import asyncio
+
+from postgrest import APIResponse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -12,3 +15,6 @@ if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
     raise RuntimeError("Variáveis de ambiente do Supabase não configuradas.")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+async def run_query(query_fn) -> APIResponse:
+    return await asyncio.to_thread(query_fn)

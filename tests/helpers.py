@@ -107,8 +107,7 @@ def mock_validate_book_exists(monkeypatch):
 
 def save_book(client, token, book_id):
     return client.post(
-        "/api/books/saved",
-        json={"book_id": book_id},
+        f"/api/books/saved/{book_id}",
         headers=make_headers(token)
     )
 
