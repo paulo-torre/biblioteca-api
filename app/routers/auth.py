@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import asyncio
 import bcrypt
 from fastapi import APIRouter, HTTPException
@@ -8,16 +7,8 @@ from datetime import datetime, timezone
 from postgrest import APIResponse
 
 from app.database import run_query, supabase
+import app.services.email as email_service 
 from app.utils.verification_code import generate_verification_code
-=======
-from datetime import datetime, timezone
-
-import bcrypt
-from fastapi import APIRouter, HTTPException
-
-import app.services.email as email_service
-from app.database import supabase
->>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
 from app.dependencies import create_access_token
 from app.models.user import (
     ForgotPasswordRequest,
@@ -27,7 +18,6 @@ from app.models.user import (
     ResetPasswordRequest,
     VerifyEmailRequest,
 )
-from app.utils import generate_verification_code
 
 router = APIRouter()
 
@@ -49,20 +39,13 @@ async def register(body: RegisterRequest):
     )
     if email_exists.data:
         raise HTTPException(status_code=409, detail="Email já cadastrado.")
-<<<<<<< HEAD
     
     if username_exists.data:
-=======
-
-    existing = supabase.table("users").select("id").eq("username", body.username).execute()
-    if existing.data:
->>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
         raise HTTPException(status_code=409, detail="Username já está em uso.")
 
     hashed_password = bcrypt.hashpw(body.password.encode("utf-8"), bcrypt.gensalt())
     code, expires_at = generate_verification_code()
 
-<<<<<<< HEAD
     result: APIResponse = await run_query(
         supabase.table("users").insert({
             "email": body.email,
@@ -73,17 +56,6 @@ async def register(body: RegisterRequest):
             "verify_code_expires": expires_at.isoformat(),
         }).execute
     )
-=======
-    result = supabase.table("users").insert({
-        "email": body.email,
-        "username": body.username,
-        "password": hashed_password.decode("utf-8"),
-        "email_verified": False,
-        "verify_code": code,
-        "verify_code_expires": expires_at.isoformat(),
-    }).execute()
-
->>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao criar o usuário.")
 
@@ -111,7 +83,6 @@ async def verify_email(body: VerifyEmailRequest):
 
     if now > expires_at:
         raise HTTPException(status_code=400, detail="Código expirado.")
-<<<<<<< HEAD
     
     update_result: APIResponse = await run_query(
         supabase.table("users").update({
@@ -123,14 +94,6 @@ async def verify_email(body: VerifyEmailRequest):
 
     if not update_result.data:
         HTTPException(status_code=500, detail="Erro ao verificar email do usuário.")
-=======
-
-    supabase.table("users").update({
-        "email_verified": True,
-        "verify_code": None,
-        "verify_code_expires": None
-    }).eq("id", user["id"]).execute()
->>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
 
     token = create_access_token(
         user_id=user["id"],
@@ -200,18 +163,11 @@ async def forgot_password(body: ForgotPasswordRequest):
 
 @router.put("/reset-password")
 async def reset_password(body: ResetPasswordRequest):
-<<<<<<< HEAD
     result: APIResponse = await run_query(
         supabase.table("users").select(
             "id, password, verify_code, verify_code_expires"
             ).eq("email", body.email).execute
     )
-=======
-    result = supabase.table("users").select(
-        "id, password, verify_code, verify_code_expires"
-        ).eq("email", body.email).execute()
-
->>>>>>> 86f839c (refactor: ajustes finais e atualização do README.md)
     if not result.data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
