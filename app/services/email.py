@@ -4,12 +4,18 @@ import os
 resend.api_key = os.getenv("RESEND_API_KEY")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
+def get_recipient(to: str) -> str:
+    if ENVIRONMENT == "production":
+        return to    
+    
+    return "pauloricardo.torre@gmail.com"
+
 def send_verification_email(to: str, code: str) -> None:
-    if ENVIRONMENT == "development": return
+    recipient = get_recipient(to)
 
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": to,
+        "to": recipient,
         "subject": "Confirme seu email",
         "html": f"""
             <h2>Bem-vindo à Biblioteca Virtual!</h2>
@@ -20,11 +26,11 @@ def send_verification_email(to: str, code: str) -> None:
     })
 
 def send_email_change_email(to: str, code: str) -> None:
-    if ENVIRONMENT == "development": return
+    recipient = get_recipient(to)
     
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": to,
+        "to": recipient,
         "subject": "Confirme a troca de email",
         "html": f"""
             <h2>Confirmação de troca de email</h2>
@@ -36,11 +42,11 @@ def send_email_change_email(to: str, code: str) -> None:
     })
 
 def send_password_change_email(to: str, code: str) -> None:
-    if ENVIRONMENT == "development": return
+    recipient = get_recipient(to)
 
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": to,
+        "to": recipient,
         "subject": "Confirme a troca de senha",
         "html": f"""
             <h2>Confirmação de troca de senha</h2>
@@ -52,11 +58,11 @@ def send_password_change_email(to: str, code: str) -> None:
     })
 
 def send_password_changed_alert_email(to: str) -> None:
-    if ENVIRONMENT == "development": return
+    recipient = get_recipient(to)
 
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": to,
+        "to": recipient,
         "subject": "Senha alterada",
         "html": f"""
             <h2>A senha da sua conta foi alterada</h2>
@@ -65,11 +71,11 @@ def send_password_changed_alert_email(to: str) -> None:
     })
 
 def send_delete_confirmation(to: str, code: str) -> None:
-    if ENVIRONMENT == "development": return
+    recipient = get_recipient(to)
     
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": to,
+        "to": recipient,
         "subject": "Confirme a exclusão do seu usuário",
         "html": f"""
             <h2>Confirmação de exclusão de usuário</h2>
