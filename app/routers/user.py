@@ -4,6 +4,7 @@ from fastapi import Depends, Response, APIRouter, HTTPException
 from datetime import datetime, timezone
 
 from postgrest import APIResponse
+from postgrest.base_request_builder import SingleAPIResponse
 
 from app.database import run_query, supabase
 from app.dependencies import create_access_token, get_current_user
@@ -23,7 +24,6 @@ router = APIRouter()
 
 @router.get("/me", response_model=UserDTO)
 async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
-    # Dados do usuário
     user_result: APIResponse = await run_query(
         supabase.table("users")\
             .select("id, email, username, created_at")\
@@ -32,35 +32,15 @@ async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
             .execute
     )
 
-    saved_result: APIResponse = await run_query(
-        supabase.table("saved_books")\
-            .select("id", count="exact")\
-            .eq("user_id", current_user.id)\
-            .execute
+    user_stats_result: SingleAPIResponse = await run_query(
+        lambda: supabase.rpc(
+            "get_user_stats",
+            {"p_user_id": current_user.id}
+        ).execute()
     )
-    saved_count: int = saved_result.count if saved_result.count else 0
-    opinions_result: APIResponse = await run_query(
-        supabase.table("book_opinions")\
-            .select("id", count="exact")\
-            .eq("user_id", current_user.id)\
-            .execute
-    )
-    opinions_count: int = opinions_result.count if opinions_result.count else 0
-
-    reviews_result: APIResponse = await run_query(
-        supabase.table("book_reviews")\
-            .select("id", count="exact")\
-            .eq("user_id", current_user.id)\
-            .execute
-    )
-    reviews_count: int = reviews_result.count if reviews_result.count else 0
-
-    user_data: dict = user_result.data
-    user_data["stats"] = {
-        "total_saved": saved_count,
-        "total_opinions": opinions_count,
-        "total_reviews": reviews_count
-    }
+    
+    user_data = user_result.data
+    user_data["stats"] = user_stats_result.data[0]
     user_data["member_since"] = user_data.pop("created_at")
 
     return UserDTO(**user_data)
