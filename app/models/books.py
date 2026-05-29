@@ -98,7 +98,7 @@ class ReviewDTO(BaseModel):
 
 
 class ReviewSummary(BaseModel):
-    average_rating: float
+    average_rating: float | None
     rating_distribution: dict[float, int]
 
 
