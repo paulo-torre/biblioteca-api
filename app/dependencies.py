@@ -1,13 +1,13 @@
-import os
 from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
+from app.config import settings
 from app.models.user import UserResponse
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
+SECRET_KEY = settings.jwt_secret_key
+ALGORITHM = settings.jwt_algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24h
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")

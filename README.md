@@ -15,18 +15,22 @@ API REST desenvolvida com FastAPI para uma aplicação de biblioteca virtual com
 ```
 app/
 ├── main.py              # inicialização do app e registro de routers
+├── config.py            # definição das configurações gerais do app
 ├── database.py          # conexão com o Supabase
 ├── dependencies.py      # middleware de autenticação JWT
-├── utils.py             # funções utilitárias (geração de código de verificação)
 ├── models/
 │   ├── books.py         # modelos Pydantic de validação da rota /api/books/
+│   ├── common.py        # modelos Pydantic comuns em todo o projeto
 │   └── user.py          # modelos Pydantic de validação da rota /api/user/
 ├── routers/
 │   ├── auth.py          # rotas de autenticação
 │   ├── books.py         # rotas de livros
 │   └── user.py          # rotas de usuário
-└── services/
-    └── email.py         # envio de emails transacionais
+├── services/
+│   └── email.py         # envio de emails transacionais
+└── utils/
+    ├── pagination.py         # funções helpers para paginação
+    └── verification_code.py  # funções helpers para códigos de verificação
 tests/
 ├── __init__.py
 ├── conftest.py          # fixtures compartilhados entre testes
@@ -57,21 +61,22 @@ Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 # Database
 
 ## Production
-SUPABASE_URL=...
-SUPABASE_SERVICE_KEY=...
+DB_PRODUCTION_URL=...
+DB_PRODUCTION_SERVICE_KEY=...
 
 ## Development
-SUPABASE_DEVELOPMENT_URL=...
-SUPABASE_DEVELOPMENT_SERVICE_KEY=...
+DB_DEVELOPMENT_URL=...
+DB_DEVELOPMENT_SERVICE_KEY=...
 
 # JWT
-SECRET_KEY=...
+JWT_SECRET_KEY=...
 
 # Resend
-RESEND_API_KEY=...
+EMAIL_SERVICE_API_KEY=...
 
 # Configurations
 ENVIRONMENT=development
+PYTHON_VERSION=3.12.10
 ```
 
 ## Rodando o servidor
@@ -117,7 +122,7 @@ pytest tests/ -v
 |--------|--------------------------------|------|----------------------------------------------------|
 | GET    | `/api/books/search/{query}`    | ❌    | Busca livros na Open Library                       |
 | GET    | `/api/books/saved`             | ✅    | Retorna todos os livros salvos pelo usuário logado |
-| POST   | `/api/books/saved/{book_id}`             | ✅    | Salva um livro na lista do usuário logado          |
+| POST   | `/api/books/saved/{book_id}`   | ✅    | Salva um livro na lista do usuário logado          |
 | DELETE | `/api/books/saved/{book_id}`   | ✅    | Deleta o livro da lista do usuário logado          |
 | GET    | `/api/books/opinions`          | ✅    | Retorna as opiniões salvas do usuário logado       |
 | POST   | `/api/books/opinions`          | ✅    | Salva uma opinião do usuário logado sobre um livro |
