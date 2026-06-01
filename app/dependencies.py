@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from app.config import settings
 from app.models.user import UserResponse
 
+SECRET_KEY = settings.jwt_secret_key
+ALGORITHM = settings.jwt_algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24h
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -18,7 +20,7 @@ def create_access_token(user_id: str, email: str, username: str) -> str:
         "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     }
 
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
@@ -29,7 +31,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     )
 
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
         user_id: str | None = payload.get("sub")
         email: str | None = payload.get("email")
