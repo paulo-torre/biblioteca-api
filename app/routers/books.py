@@ -1,6 +1,7 @@
 import httpx
 from fastapi import APIRouter, HTTPException, Depends, Query
 from postgrest import APIResponse
+from postgrest.base_request_builder import SingleAPIResponse
 
 from app.dependencies import get_current_user
 from app.database import supabase, run_query
@@ -329,22 +330,26 @@ async def get_book_reviews(
     total = result.count if result.count else 0
     reviews = [ReviewDTO.from_db(item) for item in result.data]
 
-    all_reviews: APIResponse = await run_query(
-        supabase.table("book_reviews")\
-            .select("rating")\
-            .eq("book_id", book_id)\
-            .execute
+    summary_result: SingleAPIResponse = await run_query(
+        lambda: supabase.rpc(
+            "get_reviews_summary",
+            {"p_book_id": book_id}
+        ).execute()
     )
-    ratings = [item["rating"] for item in all_reviews.data]
-    average_rating = sum(ratings) / len(ratings) if ratings else 0
-    
-    rating_distribution: dict[float, int] = {}
-    for rating in ratings:
-        rating_distribution[rating] = rating_distribution.get(rating, 0) + 1
 
+    row = summary_result.data[0] if summary_result.data else None
+    
+    if not row or row["average_rating"] is None:
+        return ReviewSummary(
+            average_rating=None,
+            rating_distribution={}
+        )
+    
     summary = ReviewSummary(
-        average_rating=round(average_rating, 2),
-        rating_distribution=rating_distribution
+        average_rating=float(row["average_rating"]),
+        rating_distribution={
+            float(k): v for k, v in row["rating_distribution"].items()
+        }
     )
 
     return PaginatedPublicReviewsResponse(
