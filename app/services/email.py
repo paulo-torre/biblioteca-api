@@ -1,14 +1,11 @@
 import resend
-import os
 
-resend.api_key = os.getenv("RESEND_API_KEY")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+from app.config import settings
+
+resend.api_key = settings.email_service_api_key
 
 def get_recipient(to: str) -> str:
-    if ENVIRONMENT == "production":
-        return to    
-    
-    return "pauloricardo.torre@gmail.com"
+    return to if settings.is_production else "pauloricardo.torre@gmail.com"
 
 def send_verification_email(to: str, code: str) -> None:
     recipient = get_recipient(to)
