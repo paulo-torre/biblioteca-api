@@ -11,7 +11,6 @@ from app.models.books import (
     OpineBook,
     EditOpinion,
     PushReview,
-    AddViewHistory,
     SavedBookDTO,
     OpinionDTO,
     ReviewDTO,
@@ -389,15 +388,15 @@ async def get_user_reviews(
     )
 
 
-@router.post("/history")
-async def register_book_view(body: AddViewHistory, current_user: UserResponse = Depends(get_current_user)):
-    await validate_book_exists(body.book_id)
+@router.post("/history/{book_id}")
+async def register_book_view(book_id: ValidOLID, current_user: UserResponse = Depends(get_current_user)):
+    await validate_book_exists(book_id)
 
-    existing: APIResponse = await run_query(
+    result: APIResponse = await run_query(
         supabase.table("view_history")\
             .upsert({
                 "user_id": current_user.id,
-                "book_id": body.book_id,
+                "book_id": book_id,
                 "viewed_at": datetime.now(timezone.utc).isoformat()
             })\
             .execute

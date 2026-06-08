@@ -53,9 +53,6 @@ class PushReview(BaseModel):
     rating: ValidRating
     comment: ValidComment = None
 
-class AddViewHistory(BaseModel):
-    book_id: ValidOLID
-
 class SavedBookDTO(BaseModel):
     book_id: str
     saved_at: str

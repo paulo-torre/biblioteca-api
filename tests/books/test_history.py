@@ -4,7 +4,7 @@ from app.database import supabase
 
 
 def test_history_unauthorized(client):
-    resp_post = client.post("/api/books/history", json={"book_id": "OL1M"})
+    resp_post = client.post("/api/books/history/OL1M")
     assert resp_post.status_code == 401
 
     resp_get = client.get("/api/books/history")
@@ -15,7 +15,7 @@ def test_register_view_success(client, book_user_factory, mock_book_exists):
     user = book_user_factory("history_user@gmail.com", "historyuser1")
     headers = {"Authorization": f"Bearer {user['token']}"}
 
-    resp = client.post("/api/books/history", json={"book_id": "OL1234M"}, headers=headers)
+    resp = client.post("/api/books/history/OL1234M", headers=headers)
     assert resp.status_code == 200
 
     # verify record in supabase
@@ -55,19 +55,19 @@ def test_get_history_returns_last_20(client, book_user_factory, mock_book_exists
     supabase.table("view_history").delete().eq("user_id", user_id).execute()
 
 
-def test_post_missing_book_id_returns_422(client, book_user_factory):
+def test_post_missing_book_id_returns_405(client, book_user_factory):
     user = book_user_factory("history_missing@gmail.com", "historymiss1")
     headers = {"Authorization": f"Bearer {user['token']}"}
 
     resp = client.post("/api/books/history", json={}, headers=headers)
-    assert resp.status_code == 422
+    assert resp.status_code == 405
 
 
 def test_post_invalid_book_id_returns_422(client, book_user_factory):
     user = book_user_factory("history_invalid@gmail.com", "historyinv1")
     headers = {"Authorization": f"Bearer {user['token']}"}
 
-    resp = client.post("/api/books/history", json={"book_id": "   "}, headers=headers)
+    resp = client.post("/api/books/history/abcd", headers=headers)
     assert resp.status_code == 422
 
 
@@ -76,7 +76,7 @@ def test_duplicate_view_updates_viewed_at(client, book_user_factory, mock_book_e
     headers = {"Authorization": f"Bearer {user['token']}"}
 
     # first view
-    r1 = client.post("/api/books/history", json={"book_id": "OL1A"}, headers=headers)
+    r1 = client.post("/api/books/history/OL1A", headers=headers)
     assert r1.status_code == 200
 
     result1 = supabase.table("view_history").select("viewed_at").eq("user_id", user["user_id"]).eq("book_id", "OL1A").execute()
@@ -84,7 +84,7 @@ def test_duplicate_view_updates_viewed_at(client, book_user_factory, mock_book_e
     t1 = result1.data[0].get("viewed_at")
 
     # second view should update timestamp (be later)
-    r2 = client.post("/api/books/history", json={"book_id": "OL1A"}, headers=headers)
+    r2 = client.post("/api/books/history/OL1A", headers=headers)
     assert r2.status_code == 200
 
     result2 = supabase.table("view_history").select("viewed_at").eq("user_id", user["user_id"]).eq("book_id", "OL1A").execute()
@@ -124,8 +124,8 @@ def test_user_sees_only_own_history(client, book_user_factory, mock_book_exists)
     h1 = {"Authorization": f"Bearer {user1['token']}"}
     h2 = {"Authorization": f"Bearer {user2['token']}"}
 
-    client.post("/api/books/history", json={"book_id": "OL1A"}, headers=h1)
-    client.post("/api/books/history", json={"book_id": "OL2M"}, headers=h2)
+    client.post("/api/books/history/OL1A", headers=h1)
+    client.post("/api/books/history/OL2M", headers=h2)
 
     resp1 = client.get("/api/books/history", headers=h1)
     assert resp1.status_code == 200
@@ -143,5 +143,5 @@ def test_post_nonexistent_book_returns_404(client, book_user_factory):
     headers = {"Authorization": f"Bearer {user['token']}"}
 
     # do not use mock_book_exists here; posting a non-existing book should return 404
-    resp = client.post("/api/books/history", json={"book_id": "OL1W"}, headers=headers)
+    resp = client.post("/api/books/history/OL1W", headers=headers)
     assert resp.status_code == 404
