@@ -395,34 +395,13 @@ async def register_book_view(body: AddViewHistory, current_user: UserResponse = 
 
     existing: APIResponse = await run_query(
         supabase.table("view_history")\
-            .select("id")\
-            .eq("user_id", current_user.id)\
-            .eq("book_id", body.book_id)\
-            .execute
-    )
-
-    if existing.data:
-
-        result: APIResponse = await run_query(
-        supabase.table("view_history")\
-            .update({
-                "viewed_at": datetime.now(timezone.utc).isoformat()
-            })\
-            .eq("user_id", current_user.id)\
-            .eq("book_id", body.book_id)\
-            .execute
-    )
-        
-    if not existing.data:
-
-        result: APIResponse = await run_query(
-            supabase.table("view_history")\
-                .insert({
+            .upsert({
                 "user_id": current_user.id,
                 "book_id": body.book_id,
                 "viewed_at": datetime.now(timezone.utc).isoformat()
-            }).execute
-        )
+            })\
+            .execute
+    )
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao registrar visualização.")
