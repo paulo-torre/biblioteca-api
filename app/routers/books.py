@@ -14,6 +14,7 @@ from app.models.books import (
     SavedBookDTO,
     OpinionDTO,
     ReviewDTO,
+    ViewHistoryDTO,
     PaginatedPublicReviewsResponse,
     ReviewSummary,
 )
@@ -380,6 +381,55 @@ async def get_user_reviews(
     data = [ReviewDTO.from_db(item) for item in result.data]
 
     return PaginatedResponse[ReviewDTO](
+        data=data,
+        page=page,
+        size=size,
+        total=total
+    )
+
+
+@router.post("/history/{book_id}")
+async def register_book_view(book_id: ValidOLID, current_user: UserResponse = Depends(get_current_user)):
+    await validate_book_exists(book_id)
+
+    result: APIResponse = await run_query(
+        supabase.table("view_history")\
+            .upsert({
+                "user_id": current_user.id,
+                "book_id": book_id,
+                "viewed_at": datetime.now(timezone.utc).isoformat()
+            })\
+            .execute
+    )
+
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Erro ao registrar visualização.")
+    
+    return {"message": "Visualização registrada com sucesso."}
+
+
+@router.get("/history", response_model=PaginatedResponse[ViewHistoryDTO])
+async def get_view_history(
+        page: int = Query(1, ge=1),
+        size: int = Query(20, ge=1, le=100),
+        current_user: UserResponse = Depends(get_current_user)
+):
+    
+    offset = (page-1) * size
+
+    result: APIResponse = await run_query(
+        supabase.table("view_history")\
+            .select("book_id, viewed_at", count="exact")\
+            .eq("user_id", current_user.id)\
+            .range(offset, offset+size-1)\
+            .order("viewed_at", desc=True)\
+            .execute
+    )
+
+    total = result.count if result.count else 0
+    data = [ViewHistoryDTO.from_db(item) for item in result.data]
+
+    return PaginatedResponse[ViewHistoryDTO](
         data=data,
         page=page,
         size=size,

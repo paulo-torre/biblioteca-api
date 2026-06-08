@@ -97,6 +97,17 @@ class ReviewDTO(BaseModel):
         )
 
 
+class ViewHistoryDTO(BaseModel):
+    book_id: str
+    viewed_at: str
+
+    @classmethod
+    def from_db(cls, item: dict) -> Self:
+        return cls(
+            book_id=item["book_id"],
+            viewed_at=item["viewed_at"]
+        )
+
 class ReviewSummary(BaseModel):
     average_rating: float | None
     rating_distribution: dict[float, int]

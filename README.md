@@ -120,19 +120,21 @@ pytest tests/ -v
 
 | Método | Rota                           | Auth | Descrição                                          |
 |--------|--------------------------------|------|----------------------------------------------------|
-| GET    | `/api/books/search/{query}`    | ❌    | Busca livros na Open Library                       |
-| GET    | `/api/books/saved`             | ✅    | Retorna todos os livros salvos pelo usuário logado |
-| POST   | `/api/books/saved/{book_id}`   | ✅    | Salva um livro na lista do usuário logado          |
-| DELETE | `/api/books/saved/{book_id}`   | ✅    | Deleta o livro da lista do usuário logado          |
-| GET    | `/api/books/opinions`          | ✅    | Retorna as opiniões salvas do usuário logado       |
-| POST   | `/api/books/opinions`          | ✅    | Salva uma opinião do usuário logado sobre um livro |
-| PUT    | `/api/books/opinions`          | ✅    | Edita a opinião do usuário logado sobre um livro   |
-| DELETE | `/api/books/opinions`          | ✅    | Deleta a opinião do usuário logado sobre um livro  |
-| GET    | `/api/books/reviews`           | ✅    | Retorna as reviews salvas do usuário logado        |
-| GET    | `/api/books/reviews/{book_id}` | ❌    | Retorna todas as reviews salvas em um livro        |
-| POST   | `/api/books/reviews`           | ✅    | Salva uma review do usuário logado sobre um livro  |
-| PUT    | `/api/books/reviews`           | ✅    | Edita a review do usuário logado sobre um livro    |
-| DELETE | `/api/books/reviews/{book_id}` | ✅    | Deleta a review do usuário logado sobre um livro   |
+| GET    | `/api/books/search/{query}`    | ❌   | Busca livros na Open Library                       |
+| GET    | `/api/books/saved`             | ✅   | Retorna todos os livros salvos pelo usuário logado |
+| POST   | `/api/books/saved/{book_id}`   | ✅   | Salva um livro na lista do usuário logado          |
+| DELETE | `/api/books/saved/{book_id}`   | ✅   | Deleta o livro da lista do usuário logado          |
+| GET    | `/api/books/opinions`          | ✅   | Retorna as opiniões salvas do usuário logado       |
+| POST   | `/api/books/opinions`          | ✅   | Salva uma opinião do usuário logado sobre um livro |
+| PUT    | `/api/books/opinions`          | ✅   | Edita a opinião do usuário logado sobre um livro   |
+| DELETE | `/api/books/opinions`          | ✅   | Deleta a opinião do usuário logado sobre um livro  |
+| GET    | `/api/books/reviews`           | ✅   | Retorna as reviews salvas do usuário logado        |
+| GET    | `/api/books/reviews/{book_id}` | ❌   | Retorna todas as reviews salvas em um livro        |
+| POST   | `/api/books/reviews`           | ✅   | Salva uma review do usuário logado sobre um livro  |
+| PUT    | `/api/books/reviews`           | ✅   | Edita a review do usuário logado sobre um livro    |
+| DELETE | `/api/books/reviews/{book_id}` | ✅   | Deleta a review do usuário logado sobre um livro   |
+| POST   | `/api/books/history/{book_id}` | ✅   | Adiciona um livro ao histórico de visualização     |
+| GET    | `/api/books/history`           | ✅   | Retorna o histórico de visualização do usuário     |
 
 ## Paginação
 
@@ -229,6 +231,22 @@ Rotas que retornam listas de itens (ex: livros salvos, opiniões, reviews) supor
   "page": 1,
   "size": 20,
   "total": 30
+}
+```
+
+#### Rota `GET /api/books/history`
+```json
+{
+  "data": [
+    {
+      "book_id": "OL8080M",
+      "viewed_at": "2024-06-01T12:00:00Z"
+    },
+    ...
+  ],
+  "page": 1,
+  "size": 20,
+  "total": 100
 }
 ```
 
