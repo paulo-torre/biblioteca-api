@@ -133,7 +133,7 @@ pytest tests/ -v
 | POST   | `/api/books/reviews`           | ✅   | Salva uma review do usuário logado sobre um livro  |
 | PUT    | `/api/books/reviews`           | ✅   | Edita a review do usuário logado sobre um livro    |
 | DELETE | `/api/books/reviews/{book_id}` | ✅   | Deleta a review do usuário logado sobre um livro   |
-| POST   | `/api/books/history`           | ✅   | Adiciona um livro ao histórico de visualização     |
+| POST   | `/api/books/history/{book_id}` | ✅   | Adiciona um livro ao histórico de visualização     |
 | GET    | `/api/books/history`           | ✅   | Retorna o histórico de visualização do usuário     |
 
 ## Paginação
