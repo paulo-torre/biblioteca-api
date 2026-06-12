@@ -1,10 +1,10 @@
-from typing import Annotated, Optional, Self
+from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel
 
 from app.models.common import PaginatedResponse
 
-VALID_SUFFIXES = {"W", "M", "A"}
+VALID_OLID_SUFFIXES = {"W", "M", "A"}
 
 def validate_opinion(v: str) -> str:
     if v not in ["liked", "loved", "disliked"]:
@@ -16,7 +16,7 @@ def validate_rating(v: float) -> float:
         raise ValueError("A avaliação deve estar entre 0 e 5 em múltiplos de 0.5.")
     return v
 
-def validate_comment(v: Optional[str]) -> Optional[str]:
+def validate_comment(v: str | None = None) -> str | None:
     if v is None:
         return v
     if len(v) >= 500:
@@ -28,7 +28,7 @@ def validate_OLID(v: str) -> str:
         raise ValueError("OLID deve começar com 'OL'.")
     if len(v) < 4:
         raise ValueError("OLID inválido.")
-    if v[-1] not in VALID_SUFFIXES:
+    if v[-1] not in VALID_OLID_SUFFIXES:
         raise ValueError("OLID deve terminar com 'W', 'M' ou 'A'.")
     if not v[2:-1].isdigit():
         raise ValueError("OLID deve conter apenas números entre o 'OL' e o sufixo.")
@@ -36,7 +36,7 @@ def validate_OLID(v: str) -> str:
 
 ValidOpinion = Annotated[str, AfterValidator(validate_opinion)]
 ValidRating = Annotated[float, AfterValidator(validate_rating)]
-ValidComment = Annotated[Optional[str], AfterValidator(validate_comment)]
+ValidComment = Annotated[str | None, AfterValidator(validate_comment)]
 ValidOLID = Annotated[str, AfterValidator(validate_OLID)]
 
 

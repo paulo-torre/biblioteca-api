@@ -1,4 +1,4 @@
-from app.database import supabase
+from app.services.database import supabase
 
 def test_verify_email_wrong_code(client, unverified_user):
     response = client.post("/api/auth/verify-email", json={

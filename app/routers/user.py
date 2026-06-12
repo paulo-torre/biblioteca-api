@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from postgrest import APIResponse
 from postgrest.base_request_builder import SingleAPIResponse
 
-from app.database import run_query, supabase
+from app.services.database import run_query, supabase
 from app.dependencies import create_access_token, get_current_user
 import app.services.email as email_service
 from app.utils.verification_code import generate_verification_code
@@ -25,11 +25,11 @@ router = APIRouter()
 @router.get("/me", response_model=UserDTO)
 async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
     user_result: APIResponse = await run_query(
-        supabase.table("users")\
+        lambda: supabase.table("users")\
             .select("id, email, username, created_at")\
             .eq("id", current_user.id)\
             .single()\
-            .execute
+            .execute()
     )
 
     user_stats_result: SingleAPIResponse = await run_query(
@@ -49,18 +49,19 @@ async def get_user_data(current_user: UserResponse=Depends(get_current_user)):
 @router.put("/me/username")
 async def username_change(body: UsernameChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     existing: APIResponse = await run_query(
-        supabase.table("users")\
+        lambda: supabase.table("users")\
             .select("id")\
             .eq("username", body.username)\
-            .execute
+            .execute()
     )
     if existing.data:
         raise HTTPException(status_code=409, detail="Username já está em uso.")
     
     update_result: APIResponse = await run_query(
-        supabase.table("users").update({
+        lambda: supabase.table("users").update({
             "username": body.username
-        }).eq("id", current_user.id).execute
+        }).eq("id", current_user.id)\
+        .execute()
     )
     if not update_result.data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -73,10 +74,10 @@ async def username_change(body: UsernameChangeRequest, current_user: UserRespons
 async def request_email_change(body: EmailChangeRequest, current_user: UserResponse = Depends(get_current_user)):
 
     existing: APIResponse = await run_query(
-        supabase.table("users")\
+        lambda: supabase.table("users")\
             .select("id")\
             .eq("email", body.new_email)\
-            .execute
+            .execute()
     )
     if existing.data:
         raise HTTPException(status_code=409, detail="Email já cadastrado.")
@@ -84,11 +85,12 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
     code, expires_at = generate_verification_code()
 
     update_result: APIResponse = await run_query(
-        supabase.table("users").update({
+        lambda: supabase.table("users").update({
             "pending_email": body.new_email,
             "verify_code": code,
             "verify_code_expires": expires_at.isoformat(),
-        }).eq("id", current_user.id).execute
+        }).eq("id", current_user.id)\
+        .execute()
     )
 
     if not update_result.data:
@@ -101,10 +103,10 @@ async def request_email_change(body: EmailChangeRequest, current_user: UserRespo
 @router.put("/me/password")
 async def request_password_change(body: PasswordChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     result: APIResponse = await run_query(
-        supabase.table("users")\
+        lambda: supabase.table("users")\
             .select("password")\
             .eq("id", current_user.id)\
-            .execute
+            .execute()
     )
     user = result.data[0]
 
@@ -119,9 +121,10 @@ async def request_password_change(body: PasswordChangeRequest, current_user: Use
     hashed_new_password = bcrypt.hashpw(body.new_password.encode("utf-8"), bcrypt.gensalt())
 
     update_result: APIResponse = await run_query(
-        supabase.table("users").update({
+        lambda: supabase.table("users").update({
             "password": hashed_new_password.decode("utf-8")
-        }).eq("id", current_user.id).execute
+        }).eq("id", current_user.id)\
+        .execute()
     )
     if not update_result.data:
         raise HTTPException(status_code=500, detail="Erro ao alterar senha.")
@@ -133,9 +136,10 @@ async def request_password_change(body: PasswordChangeRequest, current_user: Use
 @router.post("/me/verify-email-change")
 async def verify_email_change(body: VerifyEmailChangeRequest, current_user: UserResponse = Depends(get_current_user)):
     result: APIResponse = await run_query(
-        supabase.table("users").select(
+        lambda: supabase.table("users").select(
             "pending_email, verify_code, verify_code_expires"
-        ).eq("id", current_user.id).execute
+        ).eq("id", current_user.id)\
+        .execute()
     )
     user = result.data[0]
     now = datetime.now(timezone.utc)
@@ -148,12 +152,13 @@ async def verify_email_change(body: VerifyEmailChangeRequest, current_user: User
         raise HTTPException(status_code=400, detail="Código expirado.")
 
     update_result: APIResponse = await run_query(
-        supabase.table("users").update({
+        lambda: supabase.table("users").update({
             "email": user["pending_email"],
             "pending_email": None,
             "verify_code": None,
             "verify_code_expires": None,
-        }).eq("id", current_user.id).execute
+        }).eq("id", current_user.id)\
+        .execute()
     )
 
     if not update_result.data:
@@ -168,10 +173,11 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
     code, expires_at = generate_verification_code()
 
     update_result: APIResponse = await run_query(
-        supabase.table("users").update({
+        lambda: supabase.table("users").update({
             "verify_code": code,
             "verify_code_expires": expires_at.isoformat(),
-        }).eq("id", current_user.id).execute
+        }).eq("id", current_user.id)\
+        .execute()
     )
 
     if not update_result.data:
@@ -184,9 +190,10 @@ async def request_user_delete(current_user: UserResponse = Depends(get_current_u
 @router.delete("/me", status_code=204)
 async def verify_user_deletion(body: DeleteAccountRequest, current_user: UserResponse = Depends(get_current_user)):
     result: APIResponse = await run_query(
-        supabase.table("users").select(
+        lambda: supabase.table("users").select(
             "verify_code, verify_code_expires"
-        ).eq("id", current_user.id).execute
+        ).eq("id", current_user.id)\
+        .execute()
     )
     user = result.data[0]
     now = datetime.now(timezone.utc)
@@ -199,10 +206,10 @@ async def verify_user_deletion(body: DeleteAccountRequest, current_user: UserRes
         raise HTTPException(status_code=400, detail="Código expirado.")
 
     update_result: APIResponse = await run_query(
-        supabase.table("users")\
+        lambda: supabase.table("users")\
             .delete()\
             .eq("id", current_user.id)\
-            .execute
+            .execute()
     )
     if not update_result.data:
         raise HTTPException(status_code=500, detail="Erro ao deletar usuário.")

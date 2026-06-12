@@ -1,5 +1,5 @@
 from tests.helpers import register_and_verify, make_headers, cleanup_user
-from app.database import supabase
+from app.services.database import supabase
 
 def test_request_email_change_success(client):
     token = register_and_verify(client, "u_email@gmail.com", "emailtest1", "Senha123!")

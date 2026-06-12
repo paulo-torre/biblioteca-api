@@ -1,5 +1,5 @@
 from tests.helpers import register_and_verify, make_headers, cleanup_user
-from app.database import supabase
+from app.services.database import supabase
 
 def test_request_delete_success(client):
     token = register_and_verify(client, "u_delete@gmail.com", "deletetest1", "Senha123!")

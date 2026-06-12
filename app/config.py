@@ -7,10 +7,8 @@ class AppSettings(BaseSettings):
 
     environment: str = "development"
     
-    db_production_url: str
-    db_production_service_key: str
-    db_development_url: str
-    db_development_service_key: str
+    db_url: str
+    db_service_key: str
     
     email_service_api_key: str
     
@@ -23,24 +21,6 @@ class AppSettings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
-    
-    # ========== computed: database ===========
-
-    @computed_field
-    @property
-    def db_url(self) -> str:
-        if self.is_production:
-            return self.db_production_url
-        
-        return self.db_development_url 
-    
-    @computed_field
-    @property
-    def db_service_key(self) -> str:
-        if self.is_production:
-            return self.db_production_service_key
-
-        return self.db_development_service_key
 
     # ========== computed: app config ==========
 
