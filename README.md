@@ -16,7 +16,6 @@ API REST desenvolvida com FastAPI para uma aplicação de biblioteca virtual com
 app/
 ├── main.py              # inicialização do app e registro de routers
 ├── config.py            # definição das configurações gerais do app
-├── database.py          # conexão com o Supabase
 ├── dependencies.py      # middleware de autenticação JWT
 ├── models/
 │   ├── books.py         # modelos Pydantic de validação da rota /api/books/
@@ -27,6 +26,7 @@ app/
 │   ├── books.py         # rotas de livros
 │   └── user.py          # rotas de usuário
 ├── services/
+|   ├── database.py      # conexão com o Supabase
 │   └── email.py         # envio de emails transacionais
 └── utils/
     ├── pagination.py         # funções helpers para paginação
