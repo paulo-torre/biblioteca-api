@@ -4,7 +4,7 @@ from postgrest import APIResponse
 from postgrest.base_request_builder import SingleAPIResponse
 
 from app.dependencies import get_current_user
-from app.database import supabase, run_query
+from app.services.database import supabase, run_query
 from datetime import datetime, timezone
 from app.models.books import (
     ValidOLID,
@@ -75,12 +75,12 @@ async def get_saved_book(
     offset = (page-1) * size
 
     result: APIResponse = await run_query(
-        supabase.table("saved_books")\
-        .select("book_id", "saved_at", count="exact")\
-        .eq("user_id", current_user.id)\
-        .range(offset, offset+size-1)\
-        .order("saved_at", desc=True)\
-        .execute
+        lambda: supabase.table("saved_books")\
+            .select("book_id", "saved_at", count="exact")\
+            .eq("user_id", current_user.id)\
+            .range(offset, offset+size-1)\
+            .order("saved_at", desc=True)\
+            .execute()
     )
     
     total = result.count if result.count else 0
@@ -100,22 +100,22 @@ async def save_book(book_id: ValidOLID, current_user: UserResponse = Depends(get
     await validate_book_exists(book_id)
 
     existing: APIResponse = await run_query(
-        supabase.table("saved_books")\
+        lambda: supabase.table("saved_books")\
             .select("user_id", "book_id")\
             .eq("user_id", current_user.id)\
             .eq("book_id", book_id)\
-            .execute
+            .execute()
     )
     if existing.data:
         raise HTTPException(status_code=409, detail="Livro já salvo por esse usuário.")
 
 
     result: APIResponse = await run_query(
-        supabase.table("saved_books").insert({
+        lambda: supabase.table("saved_books").insert({
             "user_id": current_user.id,
             "book_id": book_id,
             "saved_at": datetime.now(timezone.utc).isoformat()
-        }).execute
+        }).execute()
     )
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao salvar livro.") 
@@ -127,11 +127,11 @@ async def save_book(book_id: ValidOLID, current_user: UserResponse = Depends(get
 async def delete_book(book_id: ValidOLID, current_user: UserResponse = Depends(get_current_user)):
     
     result: APIResponse = await run_query(
-        supabase.table("saved_books")\
+        lambda: supabase.table("saved_books")\
             .delete()\
             .eq("user_id", current_user.id)\
             .eq("book_id", book_id)\
-            .execute
+            .execute()
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Livro não encontrado entre os salvos.") 
@@ -147,12 +147,12 @@ async def get_opinions(
 ):
     offset = (page-1) * size
     result: APIResponse = await run_query(
-        supabase.table("book_opinions")\
+        lambda: supabase.table("book_opinions")\
             .select("book_id, opinion, opined_at", count="exact")\
             .eq("user_id", current_user.id)\
             .range(offset, offset+size-1)\
             .order("opined_at", desc=True)\
-            .execute
+            .execute()
     )
     total = result.count if result.count else 0
     data = [OpinionDTO.from_db(item) for item in result.data]
@@ -170,23 +170,23 @@ async def opine_book(body: OpineBook, current_user: UserResponse = Depends(get_c
     await validate_book_exists(body.book_id)
 
     existing: APIResponse = await run_query(
-        supabase.table("book_opinions")\
+        lambda: supabase.table("book_opinions")\
             .select("id")\
             .eq("book_id", body.book_id)\
             .eq("user_id", current_user.id)\
-            .execute
+            .execute()
     )
     if existing.data:
         raise HTTPException(status_code=409, detail="Você já avaliou este livro, tente editar a sua avaliação.")
     
     
     result: APIResponse = await run_query(
-        supabase.table("book_opinions").insert({
+        lambda: supabase.table("book_opinions").insert({
             "user_id": current_user.id,
             "book_id": body.book_id,
             "opinion": body.opinion,
             "opined_at": datetime.now(timezone.utc).isoformat()
-        }).execute
+        }).execute()
     )
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
@@ -196,23 +196,25 @@ async def opine_book(body: OpineBook, current_user: UserResponse = Depends(get_c
 @router.put("/opinions")
 async def edit_book_opinion(body: EditOpinion, current_user: UserResponse = Depends(get_current_user)):
     existing: APIResponse = await run_query(
-        supabase.table("book_opinions")\
+        lambda: supabase.table("book_opinions")\
             .select("id")\
             .eq("book_id", body.book_id)\
             .eq("user_id", current_user.id)\
-            .execute
+            .execute()
     )
     if not existing.data:
         raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
     
     
     result: APIResponse = await run_query(
-        supabase.table("book_opinions").update({
+        lambda: supabase.table("book_opinions").update({
             "user_id": current_user.id,
             "book_id": body.book_id,
             "opinion": body.opinion,
             "opined_at": datetime.now(timezone.utc).isoformat()
-        }).eq("user_id", current_user.id).eq("book_id", body.book_id).execute
+        }).eq("user_id", current_user.id)\
+        .eq("book_id", body.book_id)\
+        .execute()
     )
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao salvar avaliação.")
@@ -223,11 +225,11 @@ async def edit_book_opinion(body: EditOpinion, current_user: UserResponse = Depe
 async def delete_opinion(book_id: ValidOLID, current_user: UserResponse = Depends(get_current_user)):
 
     result: APIResponse = await run_query(
-        supabase.table("book_opinions")\
+        lambda: supabase.table("book_opinions")\
             .delete()\
             .eq("user_id", current_user.id)\
             .eq("book_id", book_id)\
-            .execute
+            .execute()
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
@@ -242,24 +244,24 @@ async def review_book(body: PushReview, current_user: UserResponse = Depends(get
     await validate_book_exists(body.book_id)
 
     existing: APIResponse = await run_query(
-        supabase.table("book_reviews")\
+        lambda: supabase.table("book_reviews")\
             .select("id")\
             .eq("book_id", body.book_id)\
             .eq("user_id", current_user.id)\
-            .execute
+            .execute()
     )
     if existing.data:
         raise HTTPException(status_code=409, detail="Você já avaliou este livro, tente editar a sua avaliação.")
     
     
     result: APIResponse = await run_query(
-        supabase.table("book_reviews").insert({
+        lambda: supabase.table("book_reviews").insert({
             "user_id": current_user.id,
             "book_id": body.book_id,
             "rating": body.rating,
             "comment": body.comment,
             "created_at": datetime.now(timezone.utc).isoformat()
-        }).execute
+        }).execute()
     )
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao salvar review.")
@@ -270,24 +272,26 @@ async def review_book(body: PushReview, current_user: UserResponse = Depends(get
 @router.put("/reviews")
 async def edit_book_review(body: PushReview, current_user: UserResponse = Depends(get_current_user)):
     existing: APIResponse = await run_query(
-        supabase.table("book_reviews")\
+        lambda: supabase.table("book_reviews")\
             .select("id")\
             .eq("book_id", body.book_id)\
             .eq("user_id", current_user.id)\
-            .execute
+            .execute()
     )
     if not existing.data:
         raise HTTPException(status_code=404, detail="Review não encontrada.")
     
     
     result: APIResponse = await run_query(
-        supabase.table("book_reviews").update({
+        lambda: supabase.table("book_reviews").update({
             "user_id": current_user.id,
             "book_id": body.book_id,
             "rating": body.rating,
             "comment": body.comment,
             "updated_at": datetime.now(timezone.utc).isoformat()
-        }).eq("user_id", current_user.id).eq("book_id", body.book_id).execute
+        }).eq("user_id", current_user.id)\
+        .eq("book_id", body.book_id)\
+        .execute()
     )
     if not result.data:
         raise HTTPException(status_code=500, detail="Erro ao editar review.")
@@ -299,11 +303,11 @@ async def edit_book_review(body: PushReview, current_user: UserResponse = Depend
 async def delete_review(book_id: ValidOLID, current_user: UserResponse = Depends(get_current_user)):
 
     result: APIResponse = await run_query(
-        supabase.table("book_reviews")\
+        lambda: supabase.table("book_reviews")\
             .delete()\
             .eq("user_id", current_user.id)\
             .eq("book_id", book_id)\
-            .execute
+            .execute()
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Review não encontrada.")
@@ -320,12 +324,12 @@ async def get_book_reviews(
 ):
     offset = (page-1) * size
     result: APIResponse = await run_query(
-        supabase.table("book_reviews")\
+        lambda: supabase.table("book_reviews")\
             .select("book_id, rating, comment, users(username), created_at", count="exact")\
             .eq("book_id", book_id)\
             .range(offset, offset+size-1)\
             .order("created_at", desc=True)\
-            .execute
+            .execute()
     )
     total = result.count if result.count else 0
     reviews = [ReviewDTO.from_db(item) for item in result.data]
@@ -369,12 +373,12 @@ async def get_user_reviews(
 ):
     offset = (page-1) * size
     result: APIResponse = await run_query(
-        supabase.table("book_reviews")\
+        lambda: supabase.table("book_reviews")\
             .select("book_id, rating, comment, users(username), created_at", count="exact")\
             .eq("user_id", current_user.id)\
             .range(offset, offset+size-1)\
             .order("created_at", desc=True)\
-            .execute
+            .execute()
     )
     total = result.count if result.count else 0
     data = [ReviewDTO.from_db(item) for item in result.data]

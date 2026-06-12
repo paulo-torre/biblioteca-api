@@ -5,7 +5,7 @@ import string
 from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import supabase
+from app.services.database import supabase
 from . import helpers
 
 @pytest.fixture(scope="module")

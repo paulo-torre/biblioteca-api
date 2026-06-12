@@ -1,6 +1,6 @@
 import bcrypt
 
-from app.database import supabase
+from app.services.database import supabase
 from app.dependencies import create_access_token
 
 _to_cleanup = []

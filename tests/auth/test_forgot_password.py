@@ -1,5 +1,5 @@
 from tests.helpers import register_and_verify, make_headers, cleanup_user
-from app.database import supabase
+from app.services.database import supabase
 
 def test_forgot_password_success(client):
     token = register_and_verify(client, "forgot_test@gmail.com", "forgotusertest1", "Senha123!")
